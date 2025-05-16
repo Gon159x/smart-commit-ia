@@ -1,0 +1,42 @@
+import simpleGit from "simple-git";
+const git = simpleGit();
+
+export async function getGitDiff() {
+  try {
+    return await git.diff(["--cached"]);
+  } catch (err) {
+    throw new Error("No se pudo obtener el git diff.", err);
+  }
+}
+
+export async function stageAllChanges() {
+  try {
+    await git.add(".");
+  } catch (err) {
+    throw new Error("No se pudo ejecutar git add .", err);
+  }
+}
+
+export async function unstageAllChanges() {
+  try {
+    await git.reset(["HEAD"]);
+  } catch (err) {
+    throw new Error("No se pudo deshacer git add.", err);
+  }
+}
+
+export async function stageSpecificFiles(files) {
+  try {
+    await git.add(files);
+  } catch (err) {
+    throw new Error("No se pudo hacer git add para archivos específicos.", err);
+  }
+}
+
+export async function commitWithMessage(message) {
+  try {
+    await git.commit(message);
+  } catch (err) {
+    throw new Error("No se pudo hacer el commit.", err);
+  }
+}
