@@ -17,6 +17,7 @@ export function splitDiffByFile(diffText) {
     .filter(({ filePath }) => {
       return !(
         filePath.startsWith("node_modules/") ||
+        filePath === "CHANGELOG.md" ||
         filePath.startsWith(".git/") ||
         filePath.startsWith("dist/") ||
         filePath.startsWith("build/") ||
@@ -251,22 +252,53 @@ export function extractContextMapFromCode(sourceCode, filename = undefined) {
 }
 
 export function agruparPorRelaciones(bloques) {
+  const grafo = new Map();
+
+  // Construir el grafo no dirigido
+  for (const bloque of bloques) {
+    if (!grafo.has(bloque.filename)) {
+      grafo.set(bloque.filename, new Set());
+    }
+
+    for (const related of bloque.relatedFiles) {
+      grafo.get(bloque.filename).add(related);
+
+      if (!grafo.has(related)) {
+        grafo.set(related, new Set());
+      }
+      grafo.get(related).add(bloque.filename); // relación bidireccional
+    }
+  }
+
+  const visitados = new Set();
   const grupos = [];
 
   for (const bloque of bloques) {
-    let grupoExistente = grupos.find((grupo) =>
-      grupo.some(
-        (entry) =>
-          entry.relatedFiles.includes(bloque.filename) ||
-          bloque.relatedFiles.includes(entry.filename)
-      )
-    );
+    const { filename } = bloque;
 
-    if (grupoExistente) {
-      grupoExistente.push(bloque);
-    } else {
-      grupos.push([bloque]);
+    if (visitados.has(filename)) continue;
+
+    // BFS/DFS para buscar todos los conectados
+    const cola = [filename];
+    const componente = new Set();
+
+    while (cola.length) {
+      const actual = cola.pop();
+      if (visitados.has(actual)) continue;
+
+      visitados.add(actual);
+      componente.add(actual);
+
+      for (const vecino of grafo.get(actual) || []) {
+        if (!visitados.has(vecino)) {
+          cola.push(vecino);
+        }
+      }
     }
+
+    // Agrupar los bloques correspondientes al componente
+    const grupo = bloques.filter((b) => componente.has(b.filename));
+    grupos.push(grupo);
   }
 
   return grupos;

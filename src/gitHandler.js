@@ -40,3 +40,11 @@ export async function commitWithMessage(message) {
     throw new Error("No se pudo hacer el commit.", err);
   }
 }
+
+export async function getGitStatus() {
+  try {
+    return await git.status();
+  } catch (err) {
+    throw new Error("No se pudo obtener el estado de git.", err);
+  }
+}

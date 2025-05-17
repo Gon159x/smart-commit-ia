@@ -2,14 +2,9 @@ import axios from "axios";
 import inquirer from "inquirer";
 import chalk from "chalk";
 import { getAPIKey } from "./config.js";
-import os from "os";
 import path from "path";
 import fs from "fs-extra";
 import { generateReducedTree } from "./generateProjectTree.js";
-import {
-  extractFunctionNamesFromDiff,
-  extractFunctionBlockFromFile,
-} from "./codeHandler.js";
 
 // Modelos disponibles (pueden crecer en el futuro)
 const models = [
@@ -77,9 +72,13 @@ Guidelines:
   - Each bullet should capture one logical change or idea.
   - **Do not list minor syntax changes or formatting adjustments.**
 - "filename": Only the base file name (e.g., "app.jsx"), no path.
-- "relatedFiles": Only include other project files that:
-  - Are imported or used directly.
-  - Contain code that this file interacts with or depends on.
+**IMPORTANT**
+
+"relatedFiles": should include **all files** that are being imported **from the same project**, based on the full updated file content.
+
+- This includes **every file** whose import path starts with "./" or "../", or any path that clearly belongs to the local project (e.g., aliases like "@/utils/file").
+- Include them even if those files **were not modified** or don't appear in the diff.
+- Do **not** include external dependencies such as React, lodash, or anything from "node_modules", 
 
 Additional Notes:
 
@@ -121,7 +120,7 @@ ${diffBlock}
 
 ---
 
-## 💾 Full updated file content
+## 💾 Full updated file content(*IMPORTANT*:**Remember to include in the relatedFiles output all the files wich are being imported here and belongs to the proyect but only the filename witouth the path** )
 
 \`\`\`tsx
 ${fullFileContent}
@@ -173,7 +172,6 @@ export async function summarizeCommit(
   const apiKey = await getAPIKey();
   const files = group.map((b) => b.filename);
   const tree = await generateReducedTree(files);
-  // console.log("The group--->", group);
 
   const contentByFile = group
     .map((b) => `📄 ${b.filename}\n${b.content}`)
