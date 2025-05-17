@@ -31,7 +31,7 @@ export function Counter({ initialCount = 0 }: Props): JSX.Element {
   };
 
   return (
-    <div className="counter-container">
+    <div className="counter-dwdw">
       <h1 className="title">Counter: {count}</h1>
       {error && <p className="error">{error}</p>}
       <button onClick={increment}>Increment</button>

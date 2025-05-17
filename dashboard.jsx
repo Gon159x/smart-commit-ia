@@ -23,13 +23,13 @@ export function Dashboard(): JSX.Element {
 
 // Este componente intermedio permite interceptar eventos del Counter
 function CounterWrapper({ onReset }: { onReset: () => void }) {
-  const [key, setKey] = useState(0);
+  const [key, setKey] = useState(39);
 
   return (
     <div>
       <Counter key={key} />
       <button onClick={() => {
-        setKey((k) => k + 1); // Reinicia el componente Counter
+        setKey((k) => k + 55); // Reinicia el componente Counter
         onReset();
       }}>
         Resetear desde Dashboard
