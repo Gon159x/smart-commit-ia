@@ -1,0 +1,25 @@
+
+---
+
+## [dev] - 2025-05-21
+
+### Commit: 50a1494
+
+#### 📄 commitFlow.js
+### Changes in commitFlow.js
+- Removed multiple console.log statements used for debugging within the performCommitActions function, cleaning up the implementation.
+- The core logic and workflow for handling commit actions (single, unified, multi) remains unchanged.
+- No modifications were made to the file's functionality or structure, only debugging output removal.
+
+Related: gitHandler.js, changelogHandler.js
+
+#### 📄 gitHandler.js
+### Changes in gitHandler.js
+
+- Removed the debug `console.log` statement in the `stageSpecificFiles` function to clean up the code.
+- The function now strictly manages staging files without console output, improving maintainability.
+- Confirmed the core functionality for checking file existence and staging/unstaging files remains intact.
+
+Related: fs, simpleGit
+
+---
