@@ -1,0 +1,24 @@
+# dependencias
+node_modules/
+
+# configuración local
+.config/
+config.json
+
+# logs y sistemas de cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ambiente
+.env
+.env.*.local
+
+# sistemas de lock de editores
+*.lock
+
+# archivos de lock de gestores de paquetes
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

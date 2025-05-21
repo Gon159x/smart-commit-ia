@@ -1,12 +1,30 @@
 {
   "name": "smart-commit-ia",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "main": "bin/index.js",
+  "bin": {
+    "ai-commit": "./bin/index.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "@babel/generator": "^7.27.1",
+    "@babel/parser": "^7.27.2",
+    "@babel/traverse": "^7.27.1",
+    "@babel/types": "^7.27.1",
+    "axios": "^1.9.0",
+    "chalk": "^5.4.1",
+    "clipboardy": "^4.0.0",
+    "fs-extra": "^11.3.0",
+    "globby": "^14.1.0",
+    "inquirer": "^12.6.1",
+    "ora": "^8.2.0",
+    "simple-git": "^3.27.0"
+  }
 }
