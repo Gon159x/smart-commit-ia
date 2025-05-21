@@ -8,11 +8,23 @@ export function splitDiffByFile(diffText) {
   const rawBlocks = diffText.split(/^diff --git /gm).filter(Boolean);
 
   return rawBlocks
-    .map((block) => `diff --git ${block}`)
+    .map((block) => "diff --git " + block)
     .map((block) => {
-      const match = block.match(/^diff --git a\/(.+?) b\//);
-      const filePath = match?.[1] || "archivo_desconocido";
-      return { filePath, block };
+      // Detectar renombre explícito
+      const renameToMatch = block.match(/^rename to (.+)$/m);
+      let filePath;
+
+      if (renameToMatch) {
+        filePath = renameToMatch[1];
+      } else {
+        const match = block.match(/^diff --git a\/.+? b\/(.+)/);
+        filePath = match?.[1] || "archivo_desconocido";
+      }
+
+      const wasDeleted = /--- a\/.+\n\+\+\+ \/dev\/null/.test(block);
+      const isNewFile = /--- \/dev\/null\n\+\+\+ b\//.test(block);
+
+      return { filePath, block, wasDeleted, isNewFile };
     })
     .filter(({ filePath }) => {
       return !(
@@ -34,23 +46,6 @@ export function splitDiffIntoChunks(diff) {
     .filter(Boolean)
     .map((chunk) => `@@${chunk}`);
 }
-
-// export const enrichedChunks = await Promise.all(
-//   chunks.map(async (chunk) => {
-//     const fnNames = extractFunctionNamesFromDiff(chunk);
-//     const contextBlocks = await Promise.all(
-//       fnNames.map((name) => extractFunctionBlockFromFile(fullPathToFile, name))
-//     );
-
-//     return {
-//       diffChunk: chunk,
-//       functionNames: fnNames,
-//       contextBlocks: contextBlocks.filter(Boolean),
-//       contextLevels:
-//         contextBlocks.length === 1 ? ["función"] : ["función", "módulo"],
-//     };
-//   })
-// );
 
 const patterns = [
   { regex: /function\s+([A-Z_a-z]\w*)/, group: 1 },

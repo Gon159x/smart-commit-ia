@@ -80,8 +80,6 @@ export async function performCommitActions(accion, summaries, blocks) {
         error.message
       );
     }
-
-    return;
   }
 
   if (accion === "unified") {
@@ -102,8 +100,6 @@ export async function performCommitActions(accion, summaries, blocks) {
         error.message
       );
     }
-
-    return;
   }
 
   if (accion === "multi") {
@@ -138,6 +134,7 @@ export async function performCommitActions(accion, summaries, blocks) {
   if (huboCambiosEnChangelog) {
     await commitChangelogIfChanged();
   }
+  return;
 }
 
 export async function commitChangelogIfChanged() {

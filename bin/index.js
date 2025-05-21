@@ -29,17 +29,24 @@ export async function summarizeCommits(grouped, model, isVerbose) {
 
 async function main() {
   const { isVerbose } = await setupCLI();
-  const blocks = await getAndValidateDiff(isVerbose);
+  const { blocks, removedBlocks } = await getAndValidateDiff(isVerbose);
+
   if (!blocks) return;
 
   const model = await chooseModel();
-  const { parsedBlocks } = await analyzeBlocksWithIA(blocks, model, isVerbose);
+  const { parsedBlocks } = await analyzeBlocksWithIA(
+    blocks,
+    model,
+    isVerbose,
+    removedBlocks
+  );
 
   const grouped = agruparPorRelaciones(parsedBlocks);
   printGitAdviceIfNeeded(grouped);
 
   const summaries = await summarizeCommits(grouped, model, isVerbose);
 
+  console.log("\n\n\n");
   // console.log(chalk.gray("\n📤 summaries:\n"));
   // console.dir(summaries, { depth: null, colors: true });
 

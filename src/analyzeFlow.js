@@ -1,10 +1,57 @@
 import ora from "ora";
 import chalk from "chalk";
 import path from "path";
-import { analyzeDiffBlock } from "./analyzeWithLLM.js";
+import { analyzeDiffBlock, analyzeDeletesBlocks } from "./analyzeWithLLM.js";
 
-export async function analyzeBlocksWithIA(blocks, model, isVerbose) {
+export async function analyzeBlocksWithIA(
+  blocks,
+  model,
+  isVerbose,
+  removedBlocks = []
+) {
   const parsedBlocks = [];
+
+  if (removedBlocks.length > 0) {
+    const spinner = ora(
+      "🗑️ Analizando archivos eliminados/refactorizados..."
+    ).start();
+    try {
+      const result = await analyzeDeletesBlocks(
+        removedBlocks,
+        model,
+
+        isVerbose
+      );
+      spinner.succeed("🧾 Deleted/refactored files summarized");
+
+      const relatedFiles = Array.from(
+        new Set(
+          removedBlocks.flatMap((b) =>
+            (b.movedFunctions || []).map((f) => path.basename(f.newFile))
+          )
+        )
+      );
+
+      const parsed = {
+        title: result.title,
+        content: result.content,
+        filename: "deleted_files_summary",
+        relatedFiles,
+      };
+
+      parsedBlocks.push(parsed);
+
+      if (isVerbose) {
+        console.log(
+          chalk.blueBright("\n📚 Summary for deleted/refactored files:\n")
+        );
+        console.dir(result, { depth: null, colors: true });
+      }
+    } catch (err) {
+      spinner.fail("❌ Error processing deleted/refactored files");
+      console.error(err);
+    }
+  }
 
   for (const { filePath, block } of blocks) {
     const spinner = ora(`🤖 Analizando ${filePath} con IA...`).start();
