@@ -29,7 +29,14 @@ export async function summarizeCommits(grouped, model, isVerbose) {
 
 async function main() {
   const { isVerbose } = await setupCLI();
-  const { blocks, removedBlocks } = await getAndValidateDiff(isVerbose);
+  const result = await getAndValidateDiff(isVerbose);
+
+  if (!result) {
+    return;
+  }
+
+  const { blocks, removedBlocks } = result;
+  // continuar con blocks y removedBlocks...
 
   if (!blocks) return;
 

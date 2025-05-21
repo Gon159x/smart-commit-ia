@@ -1,7 +1,6 @@
 import simpleGit from "simple-git";
 const git = simpleGit();
 import fs from "fs-extra";
-import { execSync } from "child_process";
 
 export async function getGitDiff() {
   try {
@@ -27,30 +26,44 @@ export async function unstageAllChanges() {
   }
 }
 
-export function stageSpecificFiles(files) {
-  files.forEach((file) => {
+export async function stageSpecificFiles(files) {
+  console.log("Files---<", files);
+  const toAdd = [];
+  const toRemove = [];
+
+  for (const file of files) {
     try {
-      // Si el archivo existe, se agrega normalmente
-      if (fs.existsSync(file)) {
-        execSync(`git add "${file}"`);
-      } else {
-        // Si no existe, puede ser un archivo eliminado → igual se puede agregar
-        execSync(`git rm --cached "${file}"`);
-      }
-    } catch (e) {
-      console.warn(
-        `⚠️ No se pudo agregar o eliminar el archivo: ${file}. Error:`,
-        e
-      );
+      await fs.access(file); // Verifica si el archivo existe
+      toAdd.push(file);
+    } catch {
+      toRemove.push(file); // No existe = fue eliminado
     }
-  });
+  }
+
+  try {
+    if (toAdd.length > 0) {
+      console.log("Agregando archivos:", toAdd);
+      await git.add(toAdd);
+    }
+    if (toRemove.length > 0) {
+      console.log("Eliminando archivos:", toRemove);
+      await git.rm(toRemove);
+    }
+  } catch (err) {
+    console.error("Error al hacer staging:", err);
+    throw new Error(`No se pudo hacer staging de archivos: ${err.message}`);
+  }
 }
 
 export async function commitWithMessage(message) {
   try {
     await git.commit(message);
   } catch (err) {
-    throw new Error("No se pudo hacer el commit.", err);
+    console.error("Error al hacer git add:", err);
+
+    throw new Error(
+      `No se pudo hacer git add para archivos específicos: ${err.message}`
+    );
   }
 }
 

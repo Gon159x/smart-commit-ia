@@ -38,7 +38,6 @@ export async function promptCommitAction(summaries) {
 
 import clipboardy from "clipboardy";
 import path from "path";
-import { execSync } from "child_process";
 import {
   commitWithMessage,
   getGitStatus,
@@ -67,6 +66,17 @@ export async function performCommitActions(accion, summaries, blocks) {
 
   if (accion === "single") {
     const { title, content } = summaries[0].resumen;
+
+    const fullPaths = blocks
+      .filter((b) =>
+        summaries[0].resumen.files.includes(path.basename(b.filePath))
+      )
+      .map((b) => b.filePath);
+    console.log("Blocks--->", blocks);
+    console.log("FulPaths--->", fullPaths);
+
+    await stageSpecificFiles(fullPaths);
+
     await commitWithMessage(`${title}\n\n${content}`);
     console.log(chalk.green("✅ Commit realizado con éxito."));
 
@@ -108,12 +118,43 @@ export async function performCommitActions(accion, summaries, blocks) {
     for (let i = 0; i < summaries.length; i++) {
       const { resumen, grupo } = summaries[i];
 
-      console.log("Blocks----->", blocks);
-      console.log("Resumen----->", resumen);
+      // Crear un set para evitar duplicados
+      const filePathSet = new Set();
 
-      const fullPaths = blocks
-        .filter((b) => resumen.files.includes(path.basename(b.filePath)))
-        .map((b) => b.filePath);
+      for (const block of blocks) {
+        const base = path.basename(block.filePath);
+
+        // Si el archivo forma parte del resumen
+        if (resumen.files.includes(base)) {
+          filePathSet.add(block.filePath);
+        }
+
+        // Detectar renombramientos dentro del diff
+        const renameFromMatch = block.block.match(/^rename from (.+)$/m);
+        const renameToMatch = block.block.match(/^rename to (.+)$/m);
+
+        if (renameFromMatch && renameToMatch) {
+          // path1 y path2 pueden ser relativos, ajustalos si es necesario
+          filePathSet.add(renameFromMatch[1]);
+          filePathSet.add(renameToMatch[1]);
+        }
+
+        // Detectar archivos eliminados
+        if (/^deleted file mode/m.test(block.block)) {
+          const deletedFileMatch = block.block.match(/^--- a\/(.+)$/m);
+          if (deletedFileMatch) {
+            const deletedPath = deletedFileMatch[1];
+            filePathSet.add(deletedPath);
+          } else {
+            filePathSet.add(block.filePath); // fallback por si el match no funciona
+          }
+        }
+      }
+
+      const fullPaths = Array.from(filePathSet);
+
+      console.log("Blocks--->", blocks);
+      console.log("FullPaths--->", fullPaths);
 
       await stageSpecificFiles(fullPaths);
       await commitWithMessage(`${resumen.title}\n\n${resumen.content}`);
