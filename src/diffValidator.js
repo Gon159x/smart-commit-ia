@@ -2,14 +2,6 @@ import chalk from "chalk";
 import { getGitDiff } from "./gitHandler.js";
 import { splitDiffByFile } from "./codeHandler.js";
 
-export function Dashboard() {
-  return 32;
-}
-
-export function increment() {
-  return 32;
-}
-
 export async function getAndValidateDiff(isVerbose) {
   const diff = await getGitDiff();
 
