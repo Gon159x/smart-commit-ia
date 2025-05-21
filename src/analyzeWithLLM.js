@@ -5,37 +5,48 @@ import { getAPIKey } from "./config.js";
 import path from "path";
 import fs from "fs-extra";
 import { generateReducedTree } from "./generateProjectTree.js";
+import { fetchModelsFromOpenRouter } from "../utils/fetchModels.js";
 
-// Modelos disponibles (pueden crecer en el futuro)
-const models = [
-  { name: "openai/gpt-3.5-turbo", price: "$0.50 / 1M", maxTokens: 4096 },
-  { name: "openai/gpt-4", price: "$10 / 1M", maxTokens: 8192 },
-  {
-    name: "openai/gpt-4.1-nano",
-    price: "$0.10 / 1M input — $0.40 / 1M output",
-    maxTokens: 1047576,
-  },
-  {
-    name: "openai/gpt-4.1",
-    price: "$2 / 1M input — $8 / 1M output",
-    maxTokens: 1047576,
-  },
-  { name: "mistral/mistral-7b-instruct", price: "$0.15 / 1M", maxTokens: 4000 },
-  { name: "anthropic/claude-3-sonnet", price: "$3 / 1M", maxTokens: 100000 },
-];
+// Función para construir una lista de choices con separación y estilos
+function buildChoices(models) {
+  const result = [];
+
+  models.forEach((m, i) => {
+    result.push({
+      name: chalk.bold.green(`${m.name}`) + chalk.gray(` (${m.price})`),
+      value: m.name,
+    });
+
+    // Agregar separador cada 2 modelos (puedes ajustar a gusto)
+    if ((i + 1) % 2 === 0) {
+      result.push(new inquirer.Separator());
+    }
+  });
+
+  return result;
+}
 
 export async function chooseModel() {
+  const apiKey = await getAPIKey();
+
+  if (!apiKey) {
+    throw new Error(
+      "❌ Falta la clave de API de OpenRouter (OPENROUTER_API_KEY)"
+    );
+  }
+
+  const models = await fetchModelsFromOpenRouter(apiKey);
+
   const { model } = await inquirer.prompt([
     {
       type: "list",
       name: "model",
-      message: "🧠 ¿Qué modelo LLM querés usar?",
-      choices: models.map((m) => ({
-        name: `${m.name} (${m.price})`,
-        value: m.name,
-      })),
+      message: "\n\n\n🧠 ¿Qué modelo LLM querés usar?",
+      choices: buildChoices(models),
+      loop: false, // Evita el scroll circular
     },
   ]);
+
   return model;
 }
 
@@ -124,6 +135,102 @@ ${diffBlock}
 
 \`\`\`tsx
 ${fullFileContent}
+\`\`\`
+`,
+    },
+  ];
+
+  try {
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model,
+        messages,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (verbose) {
+      console.log(chalk.gray("\n📤 Prompt enviada al modelo:\n"));
+      console.dir(messages, { depth: null, colors: true });
+    }
+
+    const raw = response.data.choices[0]?.message?.content || "{}";
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed;
+    } catch (err) {
+      console.error(chalk.red("❌ Error parsing block JSON:"), raw);
+      return null;
+    }
+  } catch (error) {
+    console.error(chalk.red("❌ Error in analyzeDiffBlock:"), error.message);
+    return "⚠️ Error analyzing diff.";
+  }
+}
+
+export async function analyzeDeletesBlocks(diffBlocks, model, verbose = false) {
+  const apiKey = await getAPIKey();
+
+  const SYSTEM_CONTENT = `
+You are a development assistant.
+
+You will be provided with a list of deleted files and metadata about whether any functions were moved elsewhere.
+
+Return a single JSON object with the following structure:
+
+{
+  "title": "type: short description",
+  "content": "Markdown-formatted changelog-style summary",
+  "filename": "deleted_files_summary",
+  "relatedFiles": ["relatedFile1.js", "relatedFile2.tsx"]
+}
+
+Guidelines:
+
+- Use title like: "refactor: removed obsolete files and relocated functions".
+- "content": Should be Markdown-formatted with a title and bullets for each file.
+  - Start with: \`### Deleted files summary\`
+  - Use bullets like:
+    - Removed \`dashboard.jsx\`, moved \`Dashboard\` to \`src/diffValidator.js\`
+    - Removed \`getGitDiff.js\` (no functions relocated)
+- "relatedFiles": Include every file mentioned as a relocation target.
+- Always return only valid JSON, no text outside it.
+`;
+
+  const messages = [
+    {
+      role: "system",
+      content: SYSTEM_CONTENT,
+    },
+    {
+      role: "user",
+      content: `
+You will be given a list of deleted file blocks.
+
+Each block has the following fields:
+- \`filePath\`: name of the file that was deleted.
+- \`block\`: a short Markdown summary describing if the file was deleted and whether its functions were moved elsewhere.
+- \`movedFunctions\`: a list of objects describing which functions were moved and where.
+
+Your task is to:
+- Write a concise changelog-style Markdown summary.
+- Use bullet points.
+- Group all the changes under the title: \`### Deleted files summary\`.
+- Format each bullet as: 
+  \`- Removed [filename], moved [FunctionName] to [NewFile]\`
+- If a file was deleted and **no functions were moved**, say: 
+  \`- Removed [filename] (no functions relocated)\`
+
+Here's the input:
+
+\`\`\`json
+${JSON.stringify(diffBlocks, null, 2)}
 \`\`\`
 `,
     },
