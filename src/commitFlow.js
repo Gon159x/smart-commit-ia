@@ -107,6 +107,10 @@ export async function performCommitActions(accion, summaries, blocks) {
 
     for (let i = 0; i < summaries.length; i++) {
       const { resumen, grupo } = summaries[i];
+
+      console.log("Blocks----->", blocks);
+      console.log("Resumen----->", resumen);
+
       const fullPaths = blocks
         .filter((b) => resumen.files.includes(path.basename(b.filePath)))
         .map((b) => b.filePath);
