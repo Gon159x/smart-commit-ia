@@ -361,3 +361,40 @@ Related: fetchModels.js
 Related: readline
 
 ---
+
+---
+
+## [dev] - 2025-05-21
+
+### Commit: ead75e9
+
+#### 📄 deleted_files_summary
+### Deleted files summary
+- Removed `dashboard.jsx` (no functions relocated)
+- Removed `src/devToolsHelper.js` (no functions relocated)
+- Removed `src/getGitDiff.js` (no functions relocated)
+- Removed `testing.jsx` (no functions relocated)
+- Removed `testing2.txt` (no functions relocated)
+
+---
+
+---
+
+## [dev] - 2025-05-21
+
+### Commit: eff3bfa
+
+#### 📄 analyzeWithLLM.js
+### Changes in analyzeWithLLM.js
+- Introduced `analyzeDeletesBlocks` to analyze deleted files and moved functions using GPT model, returning a structured JSON summary.
+- Enhanced `summarizeCommit` to produce a concise, language-specific commit message based on grouped file changes and project structure.
+- Added `buildChoices` helper for styled model selection prompts, improving UX.
+- Updated import statements with `fetchModelsFromOpenRouter`.
+- Included detailed prompts guiding GPT for analyzing deletions and creating commit summaries.
+- Implemented robust error handling for JSON parsing and API request failures.
+
+This update improves the script's capacity to automatically analyze code deletions, track function relocations, and generate meaningful commit messages.
+
+Related: config.js, generateProjectTree.js, fetchModels.js
+
+---
