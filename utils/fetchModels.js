@@ -56,7 +56,3 @@ function parsePrice(pricing) {
   const output = parseFloat(pricing.completion || 0);
   return input + output; // Este se mantiene en costo real por token si querés ordenar por eficiencia
 }
-
-const readyToUse = () => {
-  return 32;
-};
