@@ -66,17 +66,12 @@ export async function performCommitActions(accion, summaries, blocks) {
 
   if (accion === "single") {
     const { title, content } = summaries[0].resumen;
+    const fullPaths = obtenerArchivosDesdeDiff([summaries[0]], blocks);
 
-    const fullPaths = blocks
-      .filter((b) =>
-        summaries[0].resumen.files.includes(path.basename(b.filePath))
-      )
-      .map((b) => b.filePath);
     console.log("Blocks--->", blocks);
-    console.log("FulPaths--->", fullPaths);
+    console.log("FullPaths--->", fullPaths);
 
     await stageSpecificFiles(fullPaths);
-
     await commitWithMessage(`${title}\n\n${content}`);
     console.log(chalk.green("✅ Commit realizado con éxito."));
 
@@ -93,9 +88,16 @@ export async function performCommitActions(accion, summaries, blocks) {
   }
 
   if (accion === "unified") {
+    const fullPaths = obtenerArchivosDesdeDiff(summaries, blocks);
+    console.log("Blocks--->", blocks);
+    console.log("FullPaths--->", fullPaths);
+
+    await stageSpecificFiles(fullPaths);
+
     const all = summaries
       .map((s) => `${s.resumen.title}\n\n${s.resumen.content}`)
       .join("\n\n");
+
     await commitWithMessage(all);
     console.log(chalk.green("✅ Commit unificado realizado con éxito."));
 
@@ -118,40 +120,8 @@ export async function performCommitActions(accion, summaries, blocks) {
     for (let i = 0; i < summaries.length; i++) {
       const { resumen, grupo } = summaries[i];
 
-      // Crear un set para evitar duplicados
-      const filePathSet = new Set();
-
-      for (const block of blocks) {
-        const base = path.basename(block.filePath);
-
-        // Si el archivo forma parte del resumen
-        if (resumen.files.includes(base)) {
-          filePathSet.add(block.filePath);
-        }
-
-        // Detectar renombramientos dentro del diff
-        const renameFromMatch = block.block.match(/^rename from (.+)$/m);
-        const renameToMatch = block.block.match(/^rename to (.+)$/m);
-
-        if (renameFromMatch && renameToMatch) {
-          // path1 y path2 pueden ser relativos, ajustalos si es necesario
-          filePathSet.add(renameFromMatch[1]);
-          filePathSet.add(renameToMatch[1]);
-        }
-
-        // Detectar archivos eliminados
-        if (/^deleted file mode/m.test(block.block)) {
-          const deletedFileMatch = block.block.match(/^--- a\/(.+)$/m);
-          if (deletedFileMatch) {
-            const deletedPath = deletedFileMatch[1];
-            filePathSet.add(deletedPath);
-          } else {
-            filePathSet.add(block.filePath); // fallback por si el match no funciona
-          }
-        }
-      }
-
-      const fullPaths = Array.from(filePathSet);
+      // Usar helper para obtener los archivos relacionados
+      const fullPaths = obtenerArchivosDesdeDiff([summaries[i]], blocks);
 
       console.log("Blocks--->", blocks);
       console.log("FullPaths--->", fullPaths);
@@ -202,4 +172,44 @@ export async function commitChangelogIfChanged() {
       error.message
     );
   }
+}
+
+function obtenerArchivosDesdeDiff(summaries, blocks) {
+  const filePathSet = new Set();
+
+  for (const block of blocks) {
+    const base = path.basename(block.filePath);
+
+    // Revisar contra todos los resúmenes (para modo unified también)
+    const perteneceAResumen = summaries.some((s) =>
+      s.resumen.files.includes(base)
+    );
+    if (perteneceAResumen) {
+      filePathSet.add(block.filePath);
+    }
+
+    // Renombramientos
+    const renameFromMatch = block.block.match(/^rename from (.+)$/m);
+    const renameToMatch = block.block.match(/^rename to (.+)$/m);
+    if (renameFromMatch && renameToMatch) {
+      filePathSet.add(renameFromMatch[1]);
+      filePathSet.add(renameToMatch[1]);
+    }
+
+    // Archivos eliminados
+    if (/^deleted file mode/m.test(block.block)) {
+      const deletedFileMatch = block.block.match(/^--- a\/(.+)$/m);
+      if (deletedFileMatch) {
+        filePathSet.add(deletedFileMatch[1]);
+      } else {
+        filePathSet.add(block.filePath);
+      }
+    }
+  }
+
+  return Array.from(filePathSet);
+}
+
+function aSimpleFunction() {
+  return 32;
 }
