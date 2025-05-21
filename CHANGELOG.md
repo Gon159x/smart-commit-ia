@@ -74,3 +74,32 @@ Related: fetchModels.js
 - Introduced a new function `anotherVariable` that returns the string "hola mundo".
 
 ---
+
+---
+
+## [dev] - 2025-05-21
+
+### Commit: d719ee5
+
+#### 📄 deleted_files_summary
+### Deleted files summary
+- Removed `anotherFile.js` (no functions relocated)
+
+---
+
+---
+
+## [dev] - 2025-05-21
+
+### Commit: 040902b
+
+#### 📄 fetchModels.js
+### Changes in fetchModels.js
+- Introduced the asynchronous function `fetchModelsFromOpenRouter` to fetch model data from the OpenRouter API, with support for filtering, sorting, and selecting the most cost-efficient models.
+- Removed the previously defined `readyToUse` function, possibly indicating a refactor or change in initialization logic.
+- Added helper functions `formatPrice` to format the pricing information and `parsePrice` to compute the total cost from prompt and completion prices.
+- Implemented logic to ensure essential models are always included and combined with top N cheapest models, removing duplicates before returning the dataset.
+
+Related: fetchModels.js
+
+---
