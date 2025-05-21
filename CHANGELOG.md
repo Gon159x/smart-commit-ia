@@ -1277,3 +1277,31 @@ Related: gitHandler.js
 - The function is straightforward and likely intended for testing or as a placeholder.
 
 ---
+
+---
+
+## [dev] - 2025-05-21
+
+### Commit: f78a175
+
+#### 📄 deleted_files_summary
+### Deleted files summary
+- Removed `dashboard.jsx` (no functions relocated)
+- Removed `probando.js`, moved `aSimpleFunction` to `src/commitFlow.js`
+- Removed `src/getGitDiff.js` (no functions relocated)
+- Removed `testing.jsx` (no functions relocated)
+- Removed `testing2.txt` (no functions relocated)
+- Removed `utils/devToolsHelper.js` (no functions relocated)
+
+Related: commitFlow.js
+
+#### 📄 commitFlow.js
+### Changes in commitFlow.js
+- Added helper function `obtenerArchivosDesdeDiff` to centralize logic for extracting related files from diffs, handling renames, deletes, and file inclusion checks.
+- Replaced inline file collection logic in different commit modes (`single`, `unified`, `multi`) with calls to the new helper for better maintainability.
+- Ensured consistent extraction logic across all commit modes, reducing code duplication.
+- Added a placeholder `aSimpleFunction` (possibly for future use or as a stub).
+
+Related: gitHandler.js, changelogHandler.js
+
+---
