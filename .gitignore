@@ -17,3 +17,8 @@ pnpm-debug.log*
 
 # sistemas de lock de editores
 *.lock
+
+# archivos de lock de gestores de paquetes
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
