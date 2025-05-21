@@ -27,7 +27,6 @@ export async function unstageAllChanges() {
 }
 
 export async function stageSpecificFiles(files) {
-  console.log("Files---<", files);
   const toAdd = [];
   const toRemove = [];
 

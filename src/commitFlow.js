@@ -68,9 +68,6 @@ export async function performCommitActions(accion, summaries, blocks) {
     const { title, content } = summaries[0].resumen;
     const fullPaths = obtenerArchivosDesdeDiff([summaries[0]], blocks);
 
-    console.log("Blocks--->", blocks);
-    console.log("FullPaths--->", fullPaths);
-
     await stageSpecificFiles(fullPaths);
     await commitWithMessage(`${title}\n\n${content}`);
     console.log(chalk.green("✅ Commit realizado con éxito."));
@@ -89,8 +86,6 @@ export async function performCommitActions(accion, summaries, blocks) {
 
   if (accion === "unified") {
     const fullPaths = obtenerArchivosDesdeDiff(summaries, blocks);
-    console.log("Blocks--->", blocks);
-    console.log("FullPaths--->", fullPaths);
 
     await stageSpecificFiles(fullPaths);
 
@@ -122,9 +117,6 @@ export async function performCommitActions(accion, summaries, blocks) {
 
       // Usar helper para obtener los archivos relacionados
       const fullPaths = obtenerArchivosDesdeDiff([summaries[i]], blocks);
-
-      console.log("Blocks--->", blocks);
-      console.log("FullPaths--->", fullPaths);
 
       await stageSpecificFiles(fullPaths);
       await commitWithMessage(`${resumen.title}\n\n${resumen.content}`);
