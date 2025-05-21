@@ -38,3 +38,27 @@ Related: fs, simpleGit
 This file now includes a simple utility function, potentially for reuse in other parts of the project.
 
 ---
+
+---
+
+## [dev] - 2025-05-21
+
+### Commit: defe45c
+
+#### 📄 deleted_files_summary
+### Deleted files summary
+- Removed testingFile.js, moved readyToUse to utils/fetchModels.js
+
+Related: fetchModels.js
+
+#### 📄 fetchModels.js
+### Changes in fetchModels.js
+- Introduced a new function `readyToUse` that returns the constant value 32.
+
+This function is likely intended for future use or configuration purposes, but currently only returns a fixed number.
+
+The existing functions for fetching and processing model data remain unchanged and are kept intact.
+
+Related: fetchModels.js
+
+---
