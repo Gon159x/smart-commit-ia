@@ -209,7 +209,3 @@ function obtenerArchivosDesdeDiff(summaries, blocks) {
 
   return Array.from(filePathSet);
 }
-
-function aSimpleFunction() {
-  return 32;
-}
