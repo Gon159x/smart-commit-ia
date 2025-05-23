@@ -151,6 +151,7 @@ ${fullFileContent}
         headers: {
           Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
+          "User-Agent": "smart-commit-ia/1.0",
         },
       }
     );
@@ -247,6 +248,7 @@ ${JSON.stringify(diffBlocks, null, 2)}
         headers: {
           Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
+          "User-Agent": "smart-commit-ia/1.0",
         },
       }
     );
@@ -339,6 +341,7 @@ RESPONSE FORMAT (mandatory):
         headers: {
           Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
+          "User-Agent": "smart-commit-ia/1.0",
         },
       }
     );
