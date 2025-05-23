@@ -103,3 +103,29 @@ Related: fetchModels.js
 Related: fetchModels.js
 
 ---
+
+---
+
+## [dev] - 2025-05-23
+
+### Commit: cbc809b
+
+#### 📄 deleted_files_summary
+### Deleted files summary
+- Removed `anotherFile.js` (no functions relocated)
+
+---
+
+---
+
+## [dev] - 2025-05-23
+
+### Commit: 533a6b1
+
+#### 📄 analyzeWithLLM.js
+### Changes in analyzeWithLLM.js
+- Added 'User-Agent' header (`smart-commit-ia/1.0`) to all axios POST requests to the OpenRouter API for better request identification and tracking.
+
+Related: config.js, generateProjectTree.js, fetchModels.js
+
+---
