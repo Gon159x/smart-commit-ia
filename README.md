@@ -44,6 +44,16 @@ Todos los commits se generan en español por defecto y el historial se guarda en
 
 La API key se guarda en `~/.config/smart-commit-ia/config.json`. Puedes editar o eliminar ese archivo para cambiar la clave.
 
+## DEMO
+
+![Demostración de uso](https://github.com/Gon159x/smart-commit-ia/raw/main/media/demo.gif)
+
+## Repositorio
+
+Este proyecto es de código abierto y está disponible en GitHub:
+
+👉 [smart-commit-ia en GitHub](https://github.com/Gon159x/smart-commit-ia)
+
 ## Licencia
 
 ISC

@@ -1,10 +1,10 @@
 {
   "name": "smart-commit-ia",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "bin/index.js",
   "bin": {
-    "ai-commit": "./bin/index.js"
+    "ai-commit": "bin/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -18,6 +18,10 @@
     "openrouter",
     "llm"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gon159x/smart-commit-ia"
+  },
   "author": "Gonzalo Barroso <gonzalo.barroso94@gmail.com>",
   "license": "ISC",
   "description": "CLI para generar mensajes de commit con IA usando OpenRouter",
