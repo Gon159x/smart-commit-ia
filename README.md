@@ -11,6 +11,7 @@
 - Opcionalmente ejecuta `git add .` al iniciar para incluir los últimos cambios.
 - Ofrece distintas acciones: un solo commit, múltiples commits, unificar todos o copiar al portapapeles.
 - Actualiza un `CHANGELOG.md` con los resúmenes generados.
+- Tiene soporte para idiomas de ingles y español
 
 ## Requisitos
 
