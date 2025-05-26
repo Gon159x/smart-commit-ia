@@ -1,3 +1,4 @@
+// src/config.js
 import os from "os";
 import path from "path";
 import fs from "fs-extra";
@@ -11,7 +12,6 @@ const configPath = path.join(
   "config.json"
 );
 
-// Cargar configuración completa (o devolver objeto vacío)
 export async function loadConfig() {
   if (await fs.pathExists(configPath)) {
     return fs.readJson(configPath);
@@ -19,16 +19,13 @@ export async function loadConfig() {
   return {};
 }
 
-// Guardar configuración
 export async function saveConfig(config) {
   await fs.ensureDir(path.dirname(configPath));
   await fs.writeJson(configPath, config, { spaces: 2 });
 }
 
-// Obtener la API key
 export async function getAPIKey() {
   const config = await loadConfig();
-
   if (config.apiKey) return config.apiKey;
 
   const { apiKey } = await inquirer.prompt([
@@ -43,13 +40,18 @@ export async function getAPIKey() {
 
   config.apiKey = apiKey;
   await saveConfig(config);
-
   return apiKey;
 }
 
-// Obtener idioma, o preguntar si no está
 export async function getLanguage() {
+  const cliArgLang = getLangFromArgs();
   const config = await loadConfig();
+
+  if (cliArgLang) {
+    config.lang = cliArgLang;
+    await saveConfig(config);
+    return cliArgLang;
+  }
 
   if (config.lang) return config.lang;
 
@@ -67,10 +69,24 @@ export async function getLanguage() {
 
   config.lang = selectedLang;
   await saveConfig(config);
-
-  console.log(
-    `🌍 Idioma configurado: ${selectedLang}. Podés cambiarlo editando ${configPath}`
-  );
-
   return selectedLang;
+}
+
+// 🧠 Analizar args tipo --lang en o --en
+function getLangFromArgs() {
+  const args = process.argv;
+  const langArg = args.find((arg) => arg === "--es" || arg === "--en");
+
+  if (langArg === "--es") return "es";
+  if (langArg === "--en") return "en";
+
+  const langIndex = args.findIndex((arg) => arg === "--lang");
+  if (langIndex !== -1 && args[langIndex + 1]) {
+    const value = args[langIndex + 1];
+    if (["es", "en"].includes(value)) {
+      return value;
+    }
+  }
+
+  return null;
 }
