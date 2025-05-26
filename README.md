@@ -88,6 +88,7 @@ Este proyecto es de código abierto y está disponible en GitHub:
 - 🔐 Firma de commits con GPG usando clave propia de la herramienta
 - 🧾 Detección de cambios posteriores vía trazabilidad en el changelog
 - 🏷️ Marcar commits como generados por la IA
+- 👉 Mas sugerencias de commits por el commit final
 
 ---
 
