@@ -247,3 +247,56 @@ This update enhances the application's internationalization by providing Spanish
 Related: es.js
 
 ---
+
+---
+
+## [dev] - 2025-05-26
+
+### Commit: db6e6e6
+
+#### 📄 cliSetup.js
+### Changes in cliSetup.js
+- Added support for language selection via command line flags (--lang, --en, --es) and persistent config.
+- Implemented configuration loading and saving for language preference.
+- Improved help display to be translated and only shown when --help flag is used.
+- Refactored language determination logic to prioritize flags, config, and defaults.
+- Updated the CLI flow to use the resolved language for all messages and prompts, including confirmation messages.
+- Enhanced code readability by consolidating language resolution and config management.
+
+Related: config.js, gitHandler.js, i18n.js
+
+---
+
+---
+
+## [dev] - 2025-05-26
+
+### Commit: ec1fb03
+
+#### 📄 en.js
+### Changes in en.js
+- Added help command descriptions and options to assist users in understanding available commands and flags.
+- Included helpTitle, helpDescription, helpLang, helpVerbose, and helpHelp keys for enhanced user guidance.
+- Updated the localization object for English to support user help and interface customization features.
+
+Related: en.js
+
+---
+
+---
+
+## [dev] - 2025-05-26
+
+### Commit: 4b7748c
+
+#### 📄 es.js
+### Changes in es.js
+- Added new help command options including `--lang`, `--verbose`, and `--help` for better CLI support.
+- Introduced a help title and description to assist users in understanding available commands.
+- Updated the locale with relevant help commands for the Spanish language interface.
+
+These changes improve user guidance and CLI usability in Spanish.
+
+Related: es.js
+
+---
