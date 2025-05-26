@@ -1,6 +1,13 @@
 # Smart Commit IA
 
-`ai-commit` es una herramienta de línea de comandos que genera mensajes de commit utilizando modelos de lenguaje grandes a través de la API de [OpenRouter](https://openrouter.ai/). Analiza tu `git diff`, resume cada cambio y te propone uno o varios commits listos para usar.
+`ai-commit` es una herramienta de línea de comandos que **genera mensajes de commit inteligentes, contextuales y semánticamente relevantes**, utilizando modelos de lenguaje avanzados a través de la API de [OpenRouter](https://openrouter.ai).
+
+A diferencia de otras herramientas, no solo resume archivos modificados: **entiende qué hiciste, por qué lo hiciste, y cómo se relacionan los cambios entre sí.** Analiza tu `git diff`, agrupa los cambios por funcionalidad, detecta patrones como refactorizaciones, internacionalización, mejoras de configuración y más, para generar commits claros, útiles y auditables.
+
+Incluye un menú interactivo que te permite confirmar, modificar, copiar o ejecutar los commits directamente, así como generar automáticamente un `CHANGELOG.md`.
+
+Ideal para equipos que usan metodologías ágiles, desarrolladores que quieren mantener una buena higiene de commits, y flujos CI/CD que requieran trazabilidad de cambios.
+
 
 ## Características
 
