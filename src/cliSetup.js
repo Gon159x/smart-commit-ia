@@ -1,15 +1,23 @@
+// src/cliSetup.js
+
 import inquirer from "inquirer";
 import ora from "ora";
 import chalk from "chalk";
-import { getAPIKey } from "./config.js";
+import { getAPIKey, getLanguage } from "./config.js";
 import { stageAllChanges } from "./gitHandler.js";
 
 export async function setupCLI() {
   const isVerbose = process.argv.includes("--verbose");
 
+  // 🔐 Obtener API Key y mostrar los primeros caracteres
   const apiKey = await getAPIKey();
   console.log(chalk.blue(`🔐 Usando API Key: ${apiKey.slice(0, 6)}...\n`));
 
+  // 🌍 Obtener idioma desde config o por prompt
+  const lang = await getLanguage();
+  console.log(chalk.gray(`🌐 Idioma: ${chalk.yellow(lang)}\n`));
+
+  // 📦 Confirmar si se debe ejecutar git add .
   const { shouldAdd } = await inquirer.prompt([
     {
       type: "confirm",
@@ -25,5 +33,6 @@ export async function setupCLI() {
     spinner.succeed("✅ Cambios agregados.");
   }
 
-  return { isVerbose, apiKey };
+  // Devolver datos relevantes para el flujo principal
+  return { isVerbose, apiKey, lang };
 }

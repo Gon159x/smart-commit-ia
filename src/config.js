@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs-extra";
 import inquirer from "inquirer";
 
-// Ruta del archivo de configuración local
+// Ruta centralizada del archivo de configuración
 const configPath = path.join(
   os.homedir(),
   ".config",
@@ -11,14 +11,26 @@ const configPath = path.join(
   "config.json"
 );
 
-export async function getAPIKey() {
-  // Si ya existe el archivo, devolverla
+// Cargar configuración completa (o devolver objeto vacío)
+export async function loadConfig() {
   if (await fs.pathExists(configPath)) {
-    const config = await fs.readJson(configPath);
-    return config.apiKey;
+    return fs.readJson(configPath);
   }
+  return {};
+}
 
-  // Si no existe, pedirla al usuario
+// Guardar configuración
+export async function saveConfig(config) {
+  await fs.ensureDir(path.dirname(configPath));
+  await fs.writeJson(configPath, config, { spaces: 2 });
+}
+
+// Obtener la API key
+export async function getAPIKey() {
+  const config = await loadConfig();
+
+  if (config.apiKey) return config.apiKey;
+
   const { apiKey } = await inquirer.prompt([
     {
       type: "input",
@@ -29,11 +41,36 @@ export async function getAPIKey() {
     },
   ]);
 
-  // Crear carpeta si no existe
-  await fs.ensureDir(path.dirname(configPath));
-
-  // Guardar la API key
-  await fs.writeJson(configPath, { apiKey }, { spaces: 2 });
+  config.apiKey = apiKey;
+  await saveConfig(config);
 
   return apiKey;
+}
+
+// Obtener idioma, o preguntar si no está
+export async function getLanguage() {
+  const config = await loadConfig();
+
+  if (config.lang) return config.lang;
+
+  const { selectedLang } = await inquirer.prompt([
+    {
+      type: "list",
+      name: "selectedLang",
+      message: "Seleccioná el idioma para la interfaz:",
+      choices: [
+        { name: "Español", value: "es" },
+        { name: "English", value: "en" },
+      ],
+    },
+  ]);
+
+  config.lang = selectedLang;
+  await saveConfig(config);
+
+  console.log(
+    `🌍 Idioma configurado: ${selectedLang}. Podés cambiarlo editando ${configPath}`
+  );
+
+  return selectedLang;
 }
