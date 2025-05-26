@@ -34,7 +34,7 @@ export async function summarizeCommits(grouped, model, isVerbose, lang) {
 async function main() {
   const { isVerbose, lang } = await setupCLI();
 
-  const result = await getAndValidateDiff(isVerbose);
+  const result = await getAndValidateDiff(isVerbose, lang);
 
   if (!result) {
     return;
@@ -45,16 +45,17 @@ async function main() {
 
   if (!blocks) return;
 
-  const model = await chooseModel();
+  const model = await chooseModel(lang);
   const { parsedBlocks } = await analyzeBlocksWithIA(
     blocks,
     model,
     isVerbose,
-    removedBlocks
+    removedBlocks,
+    lang
   );
 
   const grouped = agruparPorRelaciones(parsedBlocks);
-  printGitAdviceIfNeeded(grouped);
+  printGitAdviceIfNeeded(grouped, lang);
 
   const summaries = await summarizeCommits(grouped, model, isVerbose, lang);
 
@@ -62,8 +63,8 @@ async function main() {
   // console.log(chalk.gray("\n📤 summaries:\n"));
   // console.dir(summaries, { depth: null, colors: true });
 
-  const accion = await promptCommitAction(summaries);
-  await performCommitActions(accion, summaries, blocks);
+  const accion = await promptCommitAction(summaries, lang);
+  await performCommitActions(accion, summaries, blocks, lang);
 }
 
 main();

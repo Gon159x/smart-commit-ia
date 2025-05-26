@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import { getGitDiff } from "./gitHandler.js";
 import { splitDiffByFile } from "./codeHandler.js";
+import { t } from "./i18n.js";
 
 export function Dashboard() {
   return 32;
@@ -10,17 +11,17 @@ export function increment() {
   return 32;
 }
 
-export async function getAndValidateDiff(isVerbose) {
+export async function getAndValidateDiff(isVerbose, lang = "en") {
   const diff = await getGitDiff();
 
   if (!diff.trim()) {
-    console.log(chalk.yellow("⚠️  No staged changes found."));
-    console.log(chalk.gray("Use `git add <file>` to stage changes."));
+    console.log(chalk.yellow(t("noStagedChanges", lang)));
+    console.log(chalk.gray(t("useGitAdd", lang)));
     return null;
   }
 
   if (isVerbose) {
-    console.log(chalk.gray("\n🔍 Full diff:\n"));
+    console.log(chalk.gray(t("fullDiff", lang)));
     console.log(diff);
   }
 
@@ -32,9 +33,9 @@ export async function getAndValidateDiff(isVerbose) {
 
   if (isVerbose) {
     console.log(
-      chalk.green(`✅ ${movedSummaries.length} function(s) moved:\n`)
+      chalk.green(`✅ ${movedSummaries.length} ${t("functionsMoved", lang)}`)
     );
-    console.log(chalk.green(`✅ Refactor summary:\n`));
+    console.log(chalk.green(`✅ ${t("refactorSummary", lang)}`));
     console.dir(movedSummaries, { depth: null, colors: true });
   }
 
@@ -65,7 +66,7 @@ This block represents either a refactor or removal decision.
   });
 
   if (isVerbose) {
-    console.log(chalk.blue("\n🧱 Artificial blocks:"));
+    console.log(chalk.blue(t("artificialBlocks", lang)));
     console.table(
       artificialBlocks.map((b) => ({
         file: b.filePath,
@@ -86,9 +87,10 @@ This block represents either a refactor or removal decision.
   if (isVerbose) {
     console.log(
       chalk.gray(
-        `\n🧹 Removed ${
+        t("removedBlocksInfo", lang).replace(
+          "{count}",
           blocks.length - filteredOriginalBlocks.length
-        } original deleted block(s) in favor of artificial versions.`
+        )
       )
     );
   }

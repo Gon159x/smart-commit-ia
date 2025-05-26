@@ -2,27 +2,28 @@ import ora from "ora";
 import chalk from "chalk";
 import path from "path";
 import { analyzeDiffBlock, analyzeDeletesBlocks } from "./analyzeWithLLM.js";
+import { t } from "./i18n.js";
 
 export async function analyzeBlocksWithIA(
   blocks,
   model,
   isVerbose,
-  removedBlocks = []
+  removedBlocks = [],
+  lang = "en"
 ) {
   const parsedBlocks = [];
 
   if (removedBlocks.length > 0) {
-    const spinner = ora(
-      "🗑️ Analizando archivos eliminados/refactorizados..."
-    ).start();
+    const spinner = ora(t("analyzingDeleted", lang)).start();
     try {
       const result = await analyzeDeletesBlocks(
         removedBlocks,
         model,
 
-        isVerbose
+        isVerbose,
+        lang
       );
-      spinner.succeed("🧾 Deleted/refactored files summarized");
+      spinner.succeed(t("deletedSummarySuccess", lang));
 
       const relatedFiles = Array.from(
         new Set(
@@ -42,22 +43,26 @@ export async function analyzeBlocksWithIA(
       parsedBlocks.push(parsed);
 
       if (isVerbose) {
-        console.log(
-          chalk.blueBright("\n📚 Summary for deleted/refactored files:\n")
-        );
+        console.log(chalk.blueBright(t("verboseDeletedSummary", lang)));
         console.dir(result, { depth: null, colors: true });
       }
     } catch (err) {
-      spinner.fail("❌ Error processing deleted/refactored files");
+      spinner.fail(t("errorProcessingDeleted", lang));
       console.error(err);
     }
   }
 
   for (const { filePath, block } of blocks) {
-    const spinner = ora(`🤖 Analizando ${filePath} con IA...`).start();
+    const spinner = ora(t("analyzingFile", lang).replace("{file}", filePath)).start();
     try {
-      const result = await analyzeDiffBlock(block, model, filePath, isVerbose);
-      spinner.succeed(`📄 ${filePath} procesado correctamente`);
+      const result = await analyzeDiffBlock(
+        block,
+        model,
+        filePath,
+        isVerbose,
+        lang
+      );
+      spinner.succeed(t("fileProcessed", lang).replace("{file}", filePath));
 
       const parsed = {
         title: result.title,
@@ -69,11 +74,11 @@ export async function analyzeBlocksWithIA(
       parsedBlocks.push(parsed);
 
       if (isVerbose) {
-        console.log(chalk.blueBright("\n📚 Respuesta de analyzeDiffBlock:\n"));
+        console.log(chalk.blueBright(t("verboseAnalyzeResponse", lang)));
         console.dir(result, { depth: null, colors: true });
       }
     } catch (err) {
-      spinner.fail(`❌ Error al procesar ${filePath}`);
+      spinner.fail(t("errorProcessingFile", lang).replace("{file}", filePath));
       console.error(err);
     }
   }
@@ -81,38 +86,18 @@ export async function analyzeBlocksWithIA(
   return { parsedBlocks };
 }
 
-export function printGitAdviceIfNeeded(groupedBlocks) {
+export function printGitAdviceIfNeeded(groupedBlocks, lang = "en") {
   if (groupedBlocks.length <= 1) return;
 
-  console.log(chalk.blueBright("\n📚 Consejo Git:"));
+  console.log(chalk.blueBright(`\n${t("gitAdviceTitle", lang)}`));
   console.log(
-    chalk.gray(
-      `Se recomienda realizar un commit por cada cambio con responsabilidad única.\n` +
-        `Esto mejora la trazabilidad, facilita el trabajo en equipo y el uso de herramientas como git bisect.\n`
-    )
+    chalk.gray(t("gitAdviceText", lang).replace("{tool}", chalk.cyan("ai-commit")))
   );
 
-  console.log(chalk.blueBright("\n🤝 Un consejo más de tu compa AI:"));
+  console.log(chalk.blueBright(`\n${t("aiAdviceTitle", lang)}`));
   console.log(
     chalk.gray(
-      `Uno de los objetivos de ${chalk.cyan(
-        "ai-commit"
-      )} es justamente ayudarte a mejorar la calidad de tus commits. 💎📈\n` +
-        `Commits bien pensados no solo cuentan una mejor historia del código, sino que también\n` +
-        `facilitan el debugging, los PRs y la colaboración con el equipo.\n\n` +
-        `Si te parece bien, la próxima vez que termines una funcionalidad o cambio independiente,\n` +
-        `probá correr directamente ${chalk.cyan(
-          "ai-commit"
-        )} apenas termines ese paso. 🧠⚡\n\n` +
-        `Aunque hoy ${chalk.cyan(
-          "ai-commit"
-        )} puede sugerir múltiples commits separados por archivo o propósito general,\n` +
-        `aún no puede detectar con precisión si hay más de una funcionalidad dentro del mismo archivo o bloque de código.\n` +
-        `Eso requeriría un análisis más profundo del contexto funcional, algo que todavía estamos explorando. 🤖🔬\n\n` +
-        `Por eso, cada vez que termines algo autocontenible, usá ${chalk.cyan(
-          "ai-commit"
-        )} y lo resolvemos en segundos. 🚀\n` +
-        `¡Vos programás, yo comiteo! 😉`
+      t("aiAdviceText", lang).replace(/\{tool\}/g, chalk.cyan("ai-commit"))
     )
   );
 }

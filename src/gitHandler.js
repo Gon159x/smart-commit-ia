@@ -1,6 +1,7 @@
 import simpleGit from "simple-git";
 const git = simpleGit();
 import fs from "fs-extra";
+import { t } from "./i18n.js";
 
 export async function getGitDiff() {
   try {
@@ -26,7 +27,7 @@ export async function unstageAllChanges() {
   }
 }
 
-export async function stageSpecificFiles(files) {
+export async function stageSpecificFiles(files, lang = "en") {
   const toAdd = [];
   const toRemove = [];
 
@@ -41,24 +42,24 @@ export async function stageSpecificFiles(files) {
 
   try {
     if (toAdd.length > 0) {
-      console.log("Agregando archivos:", toAdd);
+      console.log(`${t("addingFiles", lang)}`, toAdd);
       await git.add(toAdd);
     }
     if (toRemove.length > 0) {
-      console.log("Eliminando archivos:", toRemove);
+      console.log(`${t("removingFiles", lang)}`, toRemove);
       await git.rm(toRemove);
     }
   } catch (err) {
-    console.error("Error al hacer staging:", err);
+    console.error(`${t("stagingError", lang)}`, err);
     throw new Error(`No se pudo hacer staging de archivos: ${err.message}`);
   }
 }
 
-export async function commitWithMessage(message) {
+export async function commitWithMessage(message, lang = "en") {
   try {
     await git.commit(message);
   } catch (err) {
-    console.error("Error al hacer git add:", err);
+    console.error(`${t("gitAddError", lang)}`, err);
 
     throw new Error(
       `No se pudo hacer git add para archivos específicos: ${err.message}`

@@ -2,8 +2,9 @@ import fs from "fs/promises";
 import { existsSync } from "fs";
 import { execSync } from "child_process";
 import chalk from "chalk";
+import { t } from "./i18n.js";
 
-export async function appendToChangelog(blocks) {
+export async function appendToChangelog(blocks, lang = "en") {
   const changelogPath = "CHANGELOG.md";
   const branch = execSync("git rev-parse --abbrev-ref HEAD").toString().trim();
   const commit = execSync("git rev-parse HEAD").toString().trim().slice(0, 7);
@@ -26,5 +27,5 @@ export async function appendToChangelog(blocks) {
     await fs.appendFile(changelogPath, changelogEntry);
   }
 
-  console.log(chalk.green("📝 CHANGELOG.md actualizado con los cambios."));
+  console.log(chalk.green(t("changelogUpdated", lang)));
 }
