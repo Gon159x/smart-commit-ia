@@ -1,6 +1,7 @@
 // contextExtractor.js
 import { parse } from "@babel/parser";
 import babelTraverse from "@babel/traverse";
+import { t } from "./i18n.js";
 const traverse = babelTraverse.default || babelTraverse;
 
 /**
@@ -9,7 +10,7 @@ const traverse = babelTraverse.default || babelTraverse;
  * @param {string} sourceCode
  * @returns {Object} contextMap - { [id]: { id, type, code, loc, parentId, children, changes } }
  */
-export function extractContextMapFromCode(sourceCode, filename) {
+export function extractContextMapFromCode(sourceCode, filename, lang = "en") {
   try {
     const ast = parse(sourceCode, {
       sourceType: "module",
@@ -99,7 +100,7 @@ export function extractContextMapFromCode(sourceCode, filename) {
 
     return Object.fromEntries(contextMap);
   } catch (err) {
-    console.error(`❌ Error parseando ${filename || "archivo"}:`, err.message);
+    console.error(`${t("errorParsing", lang)} ${filename || "archivo"}:`, err.message);
     return {};
   }
 }

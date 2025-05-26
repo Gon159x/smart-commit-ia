@@ -2,6 +2,7 @@ import axios from "axios";
 import inquirer from "inquirer";
 import chalk from "chalk";
 import { getAPIKey } from "./config.js";
+import { t } from "./i18n.js";
 import path from "path";
 import fs from "fs-extra";
 import { generateReducedTree } from "./generateProjectTree.js";
@@ -26,7 +27,7 @@ function buildChoices(models) {
   return result;
 }
 
-export async function chooseModel() {
+export async function chooseModel(lang = "en") {
   const apiKey = await getAPIKey();
 
   if (!apiKey) {
@@ -41,7 +42,7 @@ export async function chooseModel() {
     {
       type: "list",
       name: "model",
-      message: "\n\n\n🧠 ¿Qué modelo LLM querés usar?",
+      message: t("chooseModel", lang),
       choices: buildChoices(models),
       loop: false, // Evita el scroll circular
     },
@@ -54,7 +55,8 @@ export async function analyzeDiffBlock(
   diffBlock,
   model,
   filePath,
-  verbose = false
+  verbose = false,
+  lang = "en"
 ) {
   const apiKey = await getAPIKey();
   const absolutePath = path.join(process.cwd(), filePath);
@@ -157,7 +159,7 @@ ${fullFileContent}
     );
 
     if (verbose) {
-      console.log(chalk.gray("\n📤 Prompt enviada al modelo:\n"));
+      console.log(chalk.gray(t("promptSent", lang)));
       console.dir(messages, { depth: null, colors: true });
     }
 
@@ -166,16 +168,21 @@ ${fullFileContent}
       const parsed = JSON.parse(raw);
       return parsed;
     } catch (err) {
-      console.error(chalk.red("❌ Error parsing block JSON:"), raw);
+      console.error(chalk.red(`${t("errorParsingJSON", lang)}`), raw);
       return null;
     }
   } catch (error) {
-    console.error(chalk.red("❌ Error in analyzeDiffBlock:"), error.message);
+    console.error(chalk.red(`${t("errorAnalyzeDiffBlock", lang)}`), error.message);
     return "⚠️ Error analyzing diff.";
   }
 }
 
-export async function analyzeDeletesBlocks(diffBlocks, model, verbose = false) {
+export async function analyzeDeletesBlocks(
+  diffBlocks,
+  model,
+  verbose = false,
+  lang = "en"
+) {
   const apiKey = await getAPIKey();
 
   const SYSTEM_CONTENT = `
@@ -254,7 +261,7 @@ ${JSON.stringify(diffBlocks, null, 2)}
     );
 
     if (verbose) {
-      console.log(chalk.gray("\n📤 Prompt enviada al modelo:\n"));
+      console.log(chalk.gray(t("promptSent", lang)));
       console.dir(messages, { depth: null, colors: true });
     }
 
@@ -263,11 +270,11 @@ ${JSON.stringify(diffBlocks, null, 2)}
       const parsed = JSON.parse(raw);
       return parsed;
     } catch (err) {
-      console.error(chalk.red("❌ Error parsing block JSON:"), raw);
+      console.error(chalk.red(`${t("errorParsingJSON", lang)}`), raw);
       return null;
     }
   } catch (error) {
-    console.error(chalk.red("❌ Error in analyzeDiffBlock:"), error.message);
+    console.error(chalk.red(`${t("errorAnalyzeDiffBlock", lang)}`), error.message);
     return "⚠️ Error analyzing diff.";
   }
 }
@@ -326,7 +333,7 @@ RESPONSE FORMAT (mandatory):
   ];
 
   if (verbose) {
-    console.log(chalk.gray("\n📤 Prompt enviado al modelo:\n"));
+    console.log(chalk.gray(t("promptSent", lang)));
     console.dir(messages, { depth: null, colors: true });
   }
 
@@ -349,7 +356,7 @@ RESPONSE FORMAT (mandatory):
     const raw = response.data.choices[0]?.message?.content;
     return JSON.parse(raw);
   } catch (err) {
-    console.error(chalk.red("❌ Error al resumir grupo:"), err.message);
+    console.error(chalk.red(`${t("errorSummarizeGroup", lang)}`), err.message);
     return {
       title:
         lang === "en"
