@@ -182,3 +182,68 @@ Related: fs, path, os, inquirer
 - Removed `anotherFile.js` (no functions relocated)
 
 ---
+
+---
+
+## [dev] - 2025-05-26
+
+### Commit: dec773e
+
+#### 📄 index.js
+### Changes in index.js
+- Updated the `summarizeCommits` function to accept a `lang` parameter for language-specific summaries.
+- Replaced hardcoded language codes with dynamic `lang` parameter in `summarizeCommits` calls.
+- Integrated internationalization (`i18n`) support by importing and utilizing the `t` function for translating interface text.
+- Modified CLI setup to capture and pass the user's language preference (`lang`) throughout the commit summarization process.
+
+Related: cliSetup.js, diffValidator.js, analyzeWithLLM.js, analyzeFlow.js, codeHandler.js, commitFlow.js, i18n.js
+
+#### 📄 cliSetup.js
+### Changes in cliSetup.js
+- Imported `t` function from `i18n.js` for localization support.
+- Replaced static prompt messages and console logs with internationalized strings from `t()`.
+- Added localization to API key display and language info output.
+- Updated spinner success message to be localized.
+- Ensured all user-facing strings are now sourced from the i18n module for multi-language support.
+- Maintained existing functionality while enhancing multilingual capabilities.
+
+Related: config.js, gitHandler.js, i18n.js
+
+#### 📄 config.js
+### Changes in config.js
+- Added a new function `getLangFromArgs` to parse command-line arguments for language options.
+- Enhanced `getLanguage` to prioritize CLI arguments (`--es`, `--en`, `--lang`) for setting the language, overriding stored config.
+- Included logic to handle `--lang` with a specified value (`es` or `en`) from command-line arguments.
+- Slight formatting improvements for clarity and consistency in the code.
+
+Related: config.js, inquirer.js
+
+#### 📄 i18n.js
+### Changes in i18n.js
+
+- Introduced a new internationalization module that loads locale data from `locales/en.js` and `locales/es.js`.
+- Defined a `t` function to retrieve translation strings based on a key and optional language parameter, defaulting to English.
+- Included fallback to return the key itself if translation or language is not found, ensuring graceful degradation.
+
+Related: en.js, es.js
+
+#### 📄 en.js
+### Changes in en.js
+- Introduced a new localization file with English strings for API key usage, language label, Git-related prompts, and file list.
+- The file exports default object containing key-value pairs for UI messages.
+- These strings facilitate internationalization support for the application.
+- The content matches the imported module structure used elsewhere in the project.
+
+Related: en.js
+
+#### 📄 es.js
+### Changes in es.js
+
+- Introduced a new Spanish language localization file with translations for API usage prompts, language selection, git commands, and commit suggestions.
+- Defined key-value pairs for user interface strings to support Spanish-speaking users.
+
+This update enhances the application's internationalization by providing Spanish support.
+
+Related: es.js
+
+---
