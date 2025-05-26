@@ -560,3 +560,86 @@ This addition enables the application to display messages and prompts in Spanish
 Related: es.js
 
 ---
+
+---
+
+## [idiomas] - 2025-05-26
+
+### Commit: ee85ca8
+
+#### 📄 index.js
+### Changes in index.js
+- Added a shebang line (`#!/usr/bin/env node`) to make the script executable directly from the command line.
+- Introduced localization support by importing the `t` function from `../src/i18n.js`.
+- Updated the `summarizeCommits` function to accept a `lang` parameter and use it for translations.
+- Changed console output in `summarizeCommits` to use translated strings via `t()`.
+- Modified the `main` function to capture the `lang` setting from the CLI setup and pass it to `summarizeCommits`.
+- Ensured that all references to verbose and language settings are correctly propagated through the workflow.
+
+Related: cliSetup.js, diffValidator.js, analyzeWithLLM.js, codeHandler.js, commitFlow.js, i18n.js
+
+#### 📄 package.json
+### Changes in package.json
+- Added a "start" script to run the main index.js file (`node ./bin/index.js`).
+- Included various project keywords related to git, commit, AI, CLI, OpenRouter, and LLM.
+- Updated the author field with the maintainer's name and email.
+- Added a project description in Spanish indicating it's a CLI for generating commit messages using AI and OpenRouter.
+- No changes made to dependencies; only metadata and scripts are updated.
+
+Related: index.js
+
+#### 📄 cliSetup.js
+
+### Changes in cliSetup.js
+- Integrated language detection via command-line flags (`--lang`, `--en`, `--es`) with priority over saved config.
+- Loaded existing language preference from configuration file.
+- Added logic to save chosen language when `--help` is requested.
+- Localized help message output based on detected language.
+- Enhanced user prompts and logging with localized strings.
+- Refactored API key display and confirmation prompts to support multiple languages.
+- Implemented language resolution logic to determine final language setting.
+- Updated imports to include `loadConfig` and `saveConfig` functions.
+
+
+
+Related: config.js, gitHandler.js, i18n.js
+
+#### 📄 config.js
+### Changes in config.js
+- Added support for alternative command-line flags `--es` and `--en` for setting the language.
+- Improved the `getLangFromArgs` function to handle these new flags alongside `--lang`.
+- Ensured that CLI arguments directly influence saved configuration and subsequent behavior.
+- Maintained existing prompts and config saving logic, now with more flexible CLI options.
+- Included the `inquirer` import and relevant configuration logic for user prompts.
+
+Related: config.js
+
+#### 📄 i18n.js
+### Changes in i18n.js
+- Introduced a new `i18n.js` module for basic internationalization.
+- Imported language locale data for English (`en`) and Spanish (`es`) from local files.
+- Created a `locales` object to store language data.
+- Exported a `t` function to retrieve localized strings based on a key and optional language parameter, defaulting to English.
+- If a key is not found for the specified language, the function returns the key itself.
+
+Related: en.js, es.js
+
+#### 📄 en.js
+### Changes in en.js
+- Created a new localization file exporting English strings for UI labels, command help, and messages.
+- The strings include API key usage, language selection, git commands, and help information.
+- Facilitates multi-language support for the application.
+
+This setup allows the app to display messages and help texts in English, enhancing user accessibility.
+
+Related: en.js
+
+#### 📄 es.js
+### Changes in es.js
+- Introduced a new Spanish translation file with localized UI strings and messages for the application.
+- Includes translations for API key usage, language selection, Git commit prompts, and help commands.
+- This addition enhances multi-language support, making the app accessible to Spanish-speaking users.
+
+Related: es.js, tsx
+
+---
