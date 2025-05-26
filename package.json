@@ -4,7 +4,7 @@
   "type": "module",
   "main": "bin/index.js",
   "bin": {
-    "ai-commit": "./bin/index.js"
+    "ai-commit": "bin/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
