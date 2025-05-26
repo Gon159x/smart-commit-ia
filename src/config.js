@@ -3,6 +3,7 @@ import os from "os";
 import path from "path";
 import fs from "fs-extra";
 import inquirer from "inquirer";
+import { t } from "./i18n.js";
 
 // Ruta centralizada del archivo de configuración
 const configPath = path.join(
@@ -28,13 +29,14 @@ export async function getAPIKey() {
   const config = await loadConfig();
   if (config.apiKey) return config.apiKey;
 
+  const langPrompt = getLangFromArgs() || "es";
+
   const { apiKey } = await inquirer.prompt([
     {
       type: "input",
       name: "apiKey",
-      message: "🔑 Ingresá tu OpenRouter API Key:",
-      validate: (input) =>
-        input.trim() !== "" || "La API Key no puede estar vacía.",
+      message: t("apiKeyPrompt", langPrompt),
+      validate: (input) => input.trim() !== "" || t("apiKeyEmpty", langPrompt),
     },
   ]);
 
@@ -59,7 +61,7 @@ export async function getLanguage() {
     {
       type: "list",
       name: "selectedLang",
-      message: "Seleccioná el idioma para la interfaz:",
+      message: t("selectLanguage", "es"),
       choices: [
         { name: "Español", value: "es" },
         { name: "English", value: "en" },

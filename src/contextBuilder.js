@@ -1,10 +1,11 @@
 import fs from "fs";
 import path from "path";
 import { splitDiffByFile, splitDiffIntoChunks } from "./codeHandler.js";
+import { t } from "./i18n.js";
 
 import { extractContextMapFromCode } from "./contextExtractor.js"; // nuevo AST completo
 
-export async function buildContextForDiff(diffText) {
+export async function buildContextForDiff(diffText, lang = "en") {
   const blocks = splitDiffByFile(diffText);
   const enriched = [];
 
@@ -15,12 +16,12 @@ export async function buildContextForDiff(diffText) {
     try {
       sourceCode = fs.readFileSync(fullPath, "utf-8");
     } catch {
-      console.warn(`⚠️ No se pudo leer el archivo: ${fullPath}`);
+      console.warn(`${t("fileReadWarning", lang)} ${fullPath}`);
       continue;
     }
 
     // 🧠 Extraer el árbol jerárquico de contextos
-    const contextMap = extractContextMapFromCode(sourceCode, filePath);
+    const contextMap = extractContextMapFromCode(sourceCode, filePath, lang);
     const scopedChanges = [];
     let changeIdCounter = 1;
 

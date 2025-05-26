@@ -7,12 +7,20 @@
     "ai-commit": "./bin/index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./bin/index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "cli",
+    "openrouter",
+    "llm"
+  ],
+  "author": "Gonzalo Barroso <gonzalo.barroso94@gmail.com>",
   "license": "ISC",
-  "description": "",
+  "description": "CLI para generar mensajes de commit con IA usando OpenRouter",
   "dependencies": {
     "@babel/generator": "^7.27.1",
     "@babel/parser": "^7.27.2",
