@@ -40,7 +40,7 @@ npm i smart-commit-ia
 
 ## 🚀 Uso
 
-1. Ejecuta `ai-commit` (o `node ./bin/index.js` si no hiciste `npm link`).
+1. Ejecuta `ai-commit`.
 2. La primera vez se te pedirá una API key de OpenRouter y podrás elegir el modelo a utilizar.
 3. La primera vez te preguntara que idioma quieres para la interfaz y el commit final.
 4. Selecciona si quieres agregar todos los archivos cambiados al commit o selecciona manualmente cuales quiere commitear previamente con git add 'archivo'
