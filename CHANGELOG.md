@@ -129,3 +129,44 @@ Related: fetchModels.js
 Related: config.js, generateProjectTree.js, fetchModels.js
 
 ---
+
+---
+
+## [dev] - 2025-05-26
+
+### Commit: 21e8b3b
+
+#### 📄 deleted_files_summary
+### Deleted files summary
+- Removed `anotherFile.js` (no functions relocated)
+
+---
+
+---
+
+## [dev] - 2025-05-26
+
+### Commit: bc1cdef
+
+#### 📄 cliSetup.js
+### Changes in cliSetup.js
+- Imported `getLanguage` from `./config.js` to retrieve language preference.
+- Obtained and logged the language setting in the CLI setup process.
+- Modified the return statement to include the `lang` variable for use in subsequent processes.
+- Added prompts to confirm user actions and integrate internationalization support.
+- Overall enhancement to include language configuration and improve user interaction visibility.
+
+Related: config.js, gitHandler.js
+
+#### 📄 config.js
+### Changes in config.js
+- Renamed the configuration path variable for clarity.
+- Refactored configuration loading and saving into `loadConfig` and `saveConfig` functions.
+- Modified `getAPIKey` to load existing config before prompting and saving the API key.
+- Added `getLanguage` function to manage language preference, prompt user if not set, and save preference.
+- Included console message confirming language setup.
+- Improved code organization by separating concerns and reusing functions.
+
+Related: fs, path, os, inquirer
+
+---
