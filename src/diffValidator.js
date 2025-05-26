@@ -3,6 +3,7 @@ import { getGitDiff } from "./gitHandler.js";
 import { splitDiffByFile } from "./codeHandler.js";
 import { t } from "./i18n.js";
 
+
 export function Dashboard() {
   return 32;
 }
