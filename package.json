@@ -18,6 +18,10 @@
     "openrouter",
     "llm"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gon159x/smart-commit-ia"
+  },
   "author": "Gonzalo Barroso <gonzalo.barroso94@gmail.com>",
   "license": "ISC",
   "description": "CLI para generar mensajes de commit con IA usando OpenRouter",
