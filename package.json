@@ -1,6 +1,6 @@
 {
   "name": "smart-commit-ia",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "main": "bin/index.js",
   "bin": {
