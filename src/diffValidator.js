@@ -3,17 +3,14 @@ import { getGitDiff } from "./gitHandler.js";
 import { splitDiffByFile } from "./codeHandler.js";
 import { t } from "./i18n.js";
 
-
-export function Dashboard() {
-  return 32;
-}
-
-export function increment() {
-  return 32;
-}
-
 export async function getAndValidateDiff(isVerbose, lang = "en") {
-  const diff = await getGitDiff();
+  let diff;
+  try {
+    diff = await getGitDiff();
+  } catch (err) {
+    console.error(chalk.red(t("errorFetchingDiff", lang) || "Could not obtain git diff"), err.message);
+    return null;
+  }
 
   if (!diff.trim()) {
     console.log(chalk.yellow(t("noStagedChanges", lang)));
@@ -30,32 +27,24 @@ export async function getAndValidateDiff(isVerbose, lang = "en") {
   const deletedBlocks = blocks.filter((b) => b.wasDeleted && !b.isBinary);
   const otherBlocks = blocks.filter((b) => !b.wasDeleted && !b.isBinary);
 
-  const movedSummaries = detectMovedFunctions(deletedBlocks, otherBlocks);
-
-  if (isVerbose) {
-    console.log(
-      chalk.green(`✅ ${movedSummaries.length} ${t("functionsMoved", lang)}`)
-    );
-    console.log(chalk.green(`✅ ${t("refactorSummary", lang)}`));
-    console.dir(movedSummaries, { depth: null, colors: true });
-  }
+  const movedSummaries = detectMovedFunctions(deletedBlocks, otherBlocks, isVerbose, lang);
 
   const artificialBlocks = movedSummaries.map((summary) => {
     const { originalFile, movedFunctions } = summary;
     const movedList = movedFunctions
-      .map((f) => `- \`${f.func}\` → \`${f.newFile}\``)
+      .map((f) => `- \`${f.func}\` -> \`${f.newFile}\``)
       .join("\n");
 
     const detectString =
       movedList.length > 0
-        ? `The file \`${originalFile}\` was deleted, but the following functions were relocated:\n\n${movedList}`
-        : `The file \`${originalFile}\` was deleted and no functions were detected as relocated.`;
+        ? `The file \`${originalFile}\` was deleted, and the following functions were relocated:\n\n${movedList}`
+        : `The file \`${originalFile}\` was deleted. No relocated functions were detected automatically.`;
 
     return {
       filePath: originalFile,
       wasDeleted: true,
       block: `
-# ⚠️ DELETED FILE
+# DELETED FILE
 
 ${detectString}
 
@@ -66,13 +55,12 @@ This block represents either a refactor or removal decision.
     };
   });
 
-  if (isVerbose) {
+  if (isVerbose && artificialBlocks.length) {
     console.log(chalk.blue(t("artificialBlocks", lang)));
     console.table(
       artificialBlocks.map((b) => ({
         file: b.filePath,
-        type:
-          b.movedFunctions?.length > 0 ? "Refactor" : "Deleted (no refactor)",
+        type: b.movedFunctions?.length > 0 ? "Refactor" : "Deleted (no refactor)",
       }))
     );
   }
@@ -99,37 +87,16 @@ This block represents either a refactor or removal decision.
   return { removedBlocks: artificialBlocks, blocks: filteredOriginalBlocks };
 }
 
-export function detectMovedFunctions(deletedBlocks, otherBlocks) {
-  const removedFunctionsByFile = deletedBlocks.map((b) => ({
-    filePath: b.filePath,
-    functions: extractRemovedFunctions(b.block),
-  }));
-
-  const addedFunctionsByFile = otherBlocks.map((b) => ({
-    filePath: b.filePath,
-    functions: extractAddedFunctions(b.block),
-  }));
-
-  const movedSummaries = [];
-
-  for (const { filePath, functions } of removedFunctionsByFile) {
-    const moved = [];
-
-    for (const func of functions) {
-      for (const addedBlock of addedFunctionsByFile) {
-        if (addedBlock.functions.includes(func)) {
-          moved.push({ func, newFile: addedBlock.filePath });
-        }
-      }
-    }
-
-    movedSummaries.push({
-      originalFile: filePath,
-      movedFunctions: moved,
-    });
+export function detectMovedFunctions(deletedBlocks, otherBlocks, isVerbose = false, lang = "en") {
+  if (isVerbose && deletedBlocks.length) {
+    console.log(chalk.gray(t("skippingAggressiveMoveDetection", lang) || "Skipping aggressive move detection; only tracking deletions."));
   }
 
-  return movedSummaries;
+  // Conservative approach: just report deletions, avoid fragile name-based matching.
+  return deletedBlocks.map((b) => ({
+    originalFile: b.filePath,
+    movedFunctions: [],
+  }));
 }
 
 function extractRemovedFunctions(diffBlock) {

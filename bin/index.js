@@ -11,11 +11,17 @@ import { promptCommitAction, performCommitActions } from "../src/commitFlow.js";
 import chalk from "chalk";
 import { t } from "../src/i18n.js";
 
-export async function summarizeCommits(grouped, model, isVerbose, lang) {
+export async function summarizeCommits(
+  grouped,
+  model,
+  isVerbose,
+  lang,
+  apiKey
+) {
   const summaries = [];
 
   for (const grupo of grouped) {
-    const resumen = await summarizeCommit(grupo, model, lang, isVerbose);
+    const resumen = await summarizeCommit(grupo, model, lang, isVerbose, apiKey);
     summaries.push({ resumen, grupo });
 
     console.log(chalk.green.bold(`\n${t("suggestedCommit", lang)}`));
@@ -32,7 +38,7 @@ export async function summarizeCommits(grouped, model, isVerbose, lang) {
 }
 
 async function main() {
-  const { isVerbose, lang } = await setupCLI();
+  const { isVerbose, lang, apiKey } = await setupCLI();
 
   const result = await getAndValidateDiff(isVerbose, lang);
 
@@ -45,19 +51,26 @@ async function main() {
 
   if (!blocks) return;
 
-  const model = await chooseModel(lang);
+  const model = await chooseModel(lang, apiKey);
   const { parsedBlocks } = await analyzeBlocksWithIA(
     blocks,
     model,
     isVerbose,
     removedBlocks,
-    lang
+    lang,
+    apiKey
   );
 
   const grouped = agruparPorRelaciones(parsedBlocks);
   printGitAdviceIfNeeded(grouped, lang);
 
-  const summaries = await summarizeCommits(grouped, model, isVerbose, lang);
+  const summaries = await summarizeCommits(
+    grouped,
+    model,
+    isVerbose,
+    lang,
+    apiKey
+  );
 
   console.log("\n\n\n");
   // console.log(chalk.gray("\n📤 summaries:\n"));

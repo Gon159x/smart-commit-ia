@@ -167,15 +167,12 @@ export async function commitChangelogIfChanged(lang = "en") {
   }
 }
 
-function obtenerArchivosDesdeDiff(summaries, blocks) {
+export function obtenerArchivosDesdeDiff(summaries, blocks) {
   const filePathSet = new Set();
 
   for (const block of blocks) {
-    const base = path.basename(block.filePath);
-
-    // Revisar contra todos los resúmenes (para modo unified también)
     const perteneceAResumen = summaries.some((s) =>
-      s.resumen.files.includes(base)
+      s.resumen.files.includes(block.filePath)
     );
     if (perteneceAResumen) {
       filePathSet.add(block.filePath);
@@ -202,3 +199,4 @@ function obtenerArchivosDesdeDiff(summaries, blocks) {
 
   return Array.from(filePathSet);
 }
+

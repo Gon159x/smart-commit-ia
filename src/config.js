@@ -1,11 +1,9 @@
-// src/config.js
 import os from "os";
 import path from "path";
 import fs from "fs-extra";
 import inquirer from "inquirer";
 import { t } from "./i18n.js";
 
-// Ruta centralizada del archivo de configuración
 const configPath = path.join(
   os.homedir(),
   ".config",
@@ -26,6 +24,9 @@ export async function saveConfig(config) {
 }
 
 export async function getAPIKey() {
+  const envKey = process.env.OPENROUTER_API_KEY;
+  if (envKey) return envKey;
+
   const config = await loadConfig();
   if (config.apiKey) return config.apiKey;
 
@@ -63,7 +64,7 @@ export async function getLanguage() {
       name: "selectedLang",
       message: t("selectLanguage", "es"),
       choices: [
-        { name: "Español", value: "es" },
+        { name: "Espa�ol", value: "es" },
         { name: "English", value: "en" },
       ],
     },
@@ -74,7 +75,6 @@ export async function getLanguage() {
   return selectedLang;
 }
 
-// 🧠 Analizar args tipo --lang en o --en
 function getLangFromArgs() {
   const args = process.argv;
   const langArg = args.find((arg) => arg === "--es" || arg === "--en");

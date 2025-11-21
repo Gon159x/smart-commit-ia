@@ -8,7 +8,26 @@ import fs from "fs-extra";
 import { generateReducedTree } from "./generateProjectTree.js";
 import { fetchModelsFromOpenRouter } from "../utils/fetchModels.js";
 
-// Función para construir una lista de choices con separación y estilos
+const DEFAULT_MODEL = "openai/gpt-4.1";
+const REQUEST_TIMEOUT_MS = 20000;
+const MAX_RETRIES = 2;
+
+async function requestWithRetry(makeRequest) {
+  let attempt = 0;
+  let lastError;
+  while (attempt <= MAX_RETRIES) {
+    try {
+      return await makeRequest();
+    } catch (err) {
+      lastError = err;
+      attempt += 1;
+      if (attempt > MAX_RETRIES) break;
+      await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+    }
+  }
+  throw lastError;
+}
+
 function buildChoices(models) {
   const result = [];
 
@@ -18,7 +37,6 @@ function buildChoices(models) {
       value: m.name,
     });
 
-    // Agregar separador cada 2 modelos (puedes ajustar a gusto)
     if ((i + 1) % 2 === 0) {
       result.push(new inquirer.Separator());
     }
@@ -27,16 +45,24 @@ function buildChoices(models) {
   return result;
 }
 
-export async function chooseModel(lang = "en") {
-  const apiKey = await getAPIKey();
+export async function chooseModel(lang = "en", apiKeyFromCLI) {
+  const apiKey = apiKeyFromCLI || (await getAPIKey());
 
   if (!apiKey) {
-    throw new Error(
-      "❌ Falta la clave de API de OpenRouter (OPENROUTER_API_KEY)"
-    );
+    throw new Error("Missing OpenRouter API key (OPENROUTER_API_KEY)");
   }
 
-  const models = await fetchModelsFromOpenRouter(apiKey);
+  let models = [];
+  try {
+    models = await fetchModelsFromOpenRouter(apiKey);
+  } catch (err) {
+    console.warn(chalk.yellow(t("errorFetchingModels", lang) || "Failed to fetch models"), err.message);
+  }
+
+  if (!models.length) {
+    console.log(chalk.yellow(`Using default model ${DEFAULT_MODEL}`));
+    return DEFAULT_MODEL;
+  }
 
   const { model } = await inquirer.prompt([
     {
@@ -44,7 +70,8 @@ export async function chooseModel(lang = "en") {
       name: "model",
       message: t("chooseModel", lang),
       choices: buildChoices(models),
-      loop: false, // Evita el scroll circular
+      loop: false,
+      default: models.find((m) => m.name === DEFAULT_MODEL)?.name,
     },
   ]);
 
@@ -56,9 +83,10 @@ export async function analyzeDiffBlock(
   model,
   filePath,
   verbose = false,
-  lang = "en"
+  lang = "en",
+  apiKeyFromCLI
 ) {
-  const apiKey = await getAPIKey();
+  const apiKey = apiKeyFromCLI || (await getAPIKey());
   const absolutePath = path.join(process.cwd(), filePath);
 
   const isBinary =
@@ -69,14 +97,18 @@ export async function analyzeDiffBlock(
   if (isBinary) {
     const filename = path.basename(filePath);
     return {
-      title: `chore: binary asset updated`,
+      title: "chore: binary asset updated",
       content: `### Changes in ${filename}\n- Binary asset touched. Diff skipped for analysis.`,
       filename,
+      filePath,
       relatedFiles: [],
     };
   }
 
-  const fullFileContent = await fs.readFile(absolutePath, "utf-8");
+  const fileExists = await fs.pathExists(absolutePath);
+  const fullFileContent = fileExists
+    ? await fs.readFile(absolutePath, "utf-8")
+    : "(File not found on disk; using diff context only)";
 
   const SYSTEM_CONTENT = `
 You are a development assistant.
@@ -101,17 +133,16 @@ Guidelines:
   - Each bullet should capture one logical change or idea.
   - **Do not list minor syntax changes or formatting adjustments.**
 - "filename": Only the base file name (e.g., "app.jsx"), no path.
-**IMPORTANT**
 
 "relatedFiles": should include **all files** that are being imported **from the same project**, based on the full updated file content.
 
 - This includes **every file** whose import path starts with "./" or "../", or any path that clearly belongs to the local project (e.g., aliases like "@/utils/file").
 - Include them even if those files **were not modified** or don't appear in the diff.
-- Do **not** include external dependencies such as React, lodash, or anything from "node_modules", 
+- Do **not** include external dependencies such as React, lodash, or anything from "node_modules".
 
 Additional Notes:
 
-- Focus on the *purpose* of the change, not just *what line changed*.
+- Focus on the purpose of the change, not just what line changed.
 - If multiple changes contribute to a single feature, group them under one bullet.
 - Avoid repeating information already included in the title.
 - Always return a valid JSON object, with no extra text or Markdown outside the object.
@@ -135,13 +166,13 @@ Example "content" field:
     {
       role: "user",
       content: `
-## 📄 Affected file
+## Affected file
 
 \`${filePath}\`
 
 ---
 
-## 🧾 DIFF
+## DIFF
 
 \`\`\`diff
 ${diffBlock}
@@ -149,7 +180,7 @@ ${diffBlock}
 
 ---
 
-## 💾 Full updated file content(*IMPORTANT*:**Remember to include in the relatedFiles output all the files wich are being imported here and belongs to the proyect but only the filename witouth the path** )
+## Full updated file content (use to extract relatedFiles)
 
 \`\`\`tsx
 ${fullFileContent}
@@ -159,19 +190,22 @@ ${fullFileContent}
   ];
 
   try {
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model,
-        messages,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "User-Agent": "smart-commit-ia/1.0",
+    const response = await requestWithRetry(() =>
+      axios.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          model,
+          messages,
         },
-      }
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "User-Agent": "smart-commit-ia/1.0",
+          },
+          timeout: REQUEST_TIMEOUT_MS,
+        }
+      )
     );
 
     if (verbose) {
@@ -182,14 +216,18 @@ ${fullFileContent}
     const raw = response.data.choices[0]?.message?.content || "{}";
     try {
       const parsed = JSON.parse(raw);
-      return parsed;
+      return {
+        ...parsed,
+        filename: path.basename(filePath),
+        filePath,
+      };
     } catch (err) {
       console.error(chalk.red(`${t("errorParsingJSON", lang)}`), raw);
       return null;
     }
   } catch (error) {
     console.error(chalk.red(`${t("errorAnalyzeDiffBlock", lang)}`), error.message);
-    return "⚠️ Error analyzing diff.";
+    return null;
   }
 }
 
@@ -197,9 +235,10 @@ export async function analyzeDeletesBlocks(
   diffBlocks,
   model,
   verbose = false,
-  lang = "en"
+  lang = "en",
+  apiKeyFromCLI
 ) {
-  const apiKey = await getAPIKey();
+  const apiKey = apiKeyFromCLI || (await getAPIKey());
 
   const SYSTEM_CONTENT = `
 You are a development assistant.
@@ -246,9 +285,9 @@ Your task is to:
 - Write a concise changelog-style Markdown summary.
 - Use bullet points.
 - Group all the changes under the title: \`### Deleted files summary\`.
-- Format each bullet as: 
+- Format each bullet as:
   \`- Removed [filename], moved [FunctionName] to [NewFile]\`
-- If a file was deleted and **no functions were moved**, say: 
+- If a file was deleted and **no functions were moved**, say:
   \`- Removed [filename] (no functions relocated)\`
 
 Here's the input:
@@ -261,19 +300,22 @@ ${JSON.stringify(diffBlocks, null, 2)}
   ];
 
   try {
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model,
-        messages,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "User-Agent": "smart-commit-ia/1.0",
+    const response = await requestWithRetry(() =>
+      axios.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          model,
+          messages,
         },
-      }
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "User-Agent": "smart-commit-ia/1.0",
+          },
+          timeout: REQUEST_TIMEOUT_MS,
+        }
+      )
     );
 
     if (verbose) {
@@ -291,7 +333,7 @@ ${JSON.stringify(diffBlocks, null, 2)}
     }
   } catch (error) {
     console.error(chalk.red(`${t("errorAnalyzeDiffBlock", lang)}`), error.message);
-    return "⚠️ Error analyzing diff.";
+    return null;
   }
 }
 
@@ -299,23 +341,24 @@ export async function summarizeCommit(
   group,
   model,
   lang = "es",
-  verbose = false
+  verbose = false,
+  apiKeyFromCLI
 ) {
-  const apiKey = await getAPIKey();
-  const files = group.map((b) => b.filename);
+  const apiKey = apiKeyFromCLI || (await getAPIKey());
+  const files = group.map((b) => b.filePath || b.filename);
   const tree = await generateReducedTree(files);
 
   const contentByFile = group
-    .map((b) => `📄 ${b.filename}\n${b.content}`)
+    .map((b) => `- ${b.filePath || b.filename}\n${b.content}`)
     .join("\n\n");
 
   const prompt = `
 Respond in ${lang === "es" ? "Spanish" : "English"} only.
 
-📁 Project structure:
+Project structure:
 ${tree}
 
-🗂️ Grouped changes:
+Grouped changes:
 
 ${contentByFile}
 `;
@@ -328,19 +371,19 @@ You will receive:
 - A list of modified files, with technical content in MD format summarizing their changes
 
 Your goal:
-- Generate a plante text commit message with:
+- Generate a plain text commit message with:
   - "title": a short Conventional Commit-style header
   - "content": a list of technical bullets, one per meaningful change (not per file)
-  - "files": a list of involved filenames (only names, no paths)
+  - "files": a list of involved file paths (use the provided file paths, not just basenames)
 
 RESPONSE FORMAT (mandatory):
 {
   "title": "type: short summary",
   "content": "- bullet 1\\n- bullet 2",
-  "files": ["file1.js", "file2.tsx"]
+  "files": ["path/to/file1.js", "path/to/file2.tsx"]
 }
 
-⚠️ Do NOT include any extra text, markdown, or explanations. Return only a valid JSON object.
+Do NOT include any extra text, markdown, or explanations. Return only a valid JSON object.
 `;
 
   const messages = [
@@ -354,23 +397,30 @@ RESPONSE FORMAT (mandatory):
   }
 
   try {
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model,
-        messages,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "User-Agent": "smart-commit-ia/1.0",
+    const response = await requestWithRetry(() =>
+      axios.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          model,
+          messages,
         },
-      }
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "User-Agent": "smart-commit-ia/1.0",
+          },
+          timeout: REQUEST_TIMEOUT_MS,
+        }
+      )
     );
 
     const raw = response.data.choices[0]?.message?.content;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return {
+      ...parsed,
+      files,
+    };
   } catch (err) {
     console.error(chalk.red(`${t("errorSummarizeGroup", lang)}`), err.message);
     return {
@@ -381,7 +431,7 @@ RESPONSE FORMAT (mandatory):
       content:
         lang === "en"
           ? "- Could not generate summary automatically."
-          : "- No se pudo generar el resumen automático.",
+          : "- No se pudo generar el resumen autom�tico.",
       files,
     };
   }

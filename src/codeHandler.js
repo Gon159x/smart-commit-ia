@@ -328,19 +328,21 @@ export function extractContextMapFromCode(sourceCode, filename = undefined) {
 export function agruparPorRelaciones(bloques) {
   const grafo = new Map();
 
-  // Construir el grafo no dirigido
+  // Construir el grafo no dirigido usando filePath como identificador estable
   for (const bloque of bloques) {
-    if (!grafo.has(bloque.filename)) {
-      grafo.set(bloque.filename, new Set());
+    const id = bloque.filePath || bloque.filename;
+
+    if (!grafo.has(id)) {
+      grafo.set(id, new Set());
     }
 
     for (const related of bloque.relatedFiles) {
-      grafo.get(bloque.filename).add(related);
+      grafo.get(id).add(related);
 
       if (!grafo.has(related)) {
         grafo.set(related, new Set());
       }
-      grafo.get(related).add(bloque.filename); // relaciÃ³n bidireccional
+      grafo.get(related).add(id); // relación bidireccional
     }
   }
 
@@ -348,12 +350,12 @@ export function agruparPorRelaciones(bloques) {
   const grupos = [];
 
   for (const bloque of bloques) {
-    const { filename } = bloque;
+    const id = bloque.filePath || bloque.filename;
 
-    if (visitados.has(filename)) continue;
+    if (visitados.has(id)) continue;
 
     // BFS/DFS para buscar todos los conectados
-    const cola = [filename];
+    const cola = [id];
     const componente = new Set();
 
     while (cola.length) {
@@ -371,7 +373,9 @@ export function agruparPorRelaciones(bloques) {
     }
 
     // Agrupar los bloques correspondientes al componente
-    const grupo = bloques.filter((b) => componente.has(b.filename));
+    const grupo = bloques.filter((b) =>
+      componente.has(b.filePath || b.filename)
+    );
     grupos.push(grupo);
   }
 
