@@ -22,6 +22,7 @@ export async function fetchModelsFromOpenRouter(apiKey, topN = 10) {
     .sort((a, b) => a.cost - b.cost);
 
   const alwaysInclude = [
+    "openai/gpt-5-nano",
     "openai/gpt-4.1-nano",
     "openai/gpt-4.1",
     "openai/gpt-3.5-turbo",
