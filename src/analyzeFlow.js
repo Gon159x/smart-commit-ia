@@ -1,8 +1,63 @@
 import ora from "ora";
 import chalk from "chalk";
 import path from "path";
+import inquirer from "inquirer";
 import { analyzeDiffBlock, analyzeDeletesBlocks } from "./analyzeWithLLM.js";
 import { t } from "./i18n.js";
+
+const LARGE_DIFF_LINE_THRESHOLD = 2000;
+
+function buildBinarySummary(filePath, block) {
+  const filename = path.basename(filePath);
+  const changeType = block.wasDeleted
+    ? "deleted"
+    : block.isNewFile
+    ? "added"
+    : block.renameFrom
+    ? "renamed"
+    : "updated";
+
+  const renameNote =
+    changeType === "renamed" && block.renameFrom
+      ? ` (from ${path.basename(block.renameFrom)})`
+      : "";
+
+  return {
+    title: `chore: binary asset ${changeType}`,
+    content: `### Changes in ${filename}\n- Binary asset ${changeType}${renameNote}. Diff skipped.`,
+    filename,
+    relatedFiles: [],
+  };
+}
+
+function buildLargeDiffPlaceholder(filePath, lineCount) {
+  const filename = path.basename(filePath);
+  return {
+    title: `chore: ${filename} (large diff noted)`,
+    content: `### Changes in ${filename}\n- Large diff (~${lineCount} lines) skipped per user choice. File is touched in this commit.`,
+    filename,
+    relatedFiles: [],
+  };
+}
+
+async function askForLargeDiffHandling(filePath, lineCount, lang) {
+  const { choice } = await inquirer.prompt([
+    {
+      type: "list",
+      name: "choice",
+      message: t("largeDiffPrompt", lang)
+        .replace("{file}", filePath)
+        .replace("{lines}", lineCount),
+      choices: [
+        { name: t("largeDiffAnalyze", lang), value: "analyze" },
+        { name: t("largeDiffSkipWithNote", lang), value: "note" },
+        { name: t("largeDiffSkip", lang), value: "skip" },
+      ],
+    },
+  ]);
+
+  return choice;
+}
 
 export async function analyzeBlocksWithIA(
   blocks,
@@ -52,7 +107,54 @@ export async function analyzeBlocksWithIA(
     }
   }
 
-  for (const { filePath, block } of blocks) {
+  for (const blockInfo of blocks) {
+    const { filePath, block, isBinary, lineCount } = blockInfo;
+    const diffLines = lineCount ?? block.split(/\r?\n/).length;
+
+    if (isBinary) {
+      const parsed = buildBinarySummary(filePath, blockInfo);
+      parsedBlocks.push(parsed);
+      if (isVerbose) {
+        console.log(
+          chalk.yellow(
+            t("binaryFileSkipped", lang).replace("{file}", filePath)
+          )
+        );
+      }
+      continue;
+    }
+
+    if (diffLines > LARGE_DIFF_LINE_THRESHOLD) {
+      const decision = await askForLargeDiffHandling(filePath, diffLines, lang);
+
+      if (decision === "skip") {
+        if (isVerbose) {
+          console.log(
+            chalk.yellow(
+              t("largeDiffSkipped", lang)
+                .replace("{file}", filePath)
+                .replace("{lines}", diffLines)
+            )
+          );
+        }
+        continue;
+      }
+
+      if (decision === "note") {
+        parsedBlocks.push(buildLargeDiffPlaceholder(filePath, diffLines));
+        if (isVerbose) {
+          console.log(
+            chalk.yellow(
+              t("largeDiffNoted", lang)
+                .replace("{file}", filePath)
+                .replace("{lines}", diffLines)
+            )
+          );
+        }
+        continue;
+      }
+    }
+
     const spinner = ora(t("analyzingFile", lang).replace("{file}", filePath)).start();
     try {
       const result = await analyzeDiffBlock(

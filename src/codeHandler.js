@@ -1,8 +1,75 @@
 import fs from "fs-extra";
+import path from "path";
 
 import { parse } from "@babel/parser";
 import babelTraverse from "@babel/traverse";
 const traverse = babelTraverse.default || babelTraverse;
+
+const binaryExtensions = new Set([
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".bmp",
+  ".tiff",
+  ".avif",
+  ".svg",
+  ".ico",
+  ".psd",
+  ".ai",
+  ".sketch",
+  ".fig",
+  ".mp3",
+  ".wav",
+  ".flac",
+  ".ogg",
+  ".mp4",
+  ".mov",
+  ".avi",
+  ".mkv",
+  ".webm",
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx",
+  ".odt",
+  ".ods",
+  ".zip",
+  ".tar",
+  ".gz",
+  ".bz2",
+  ".xz",
+  ".7z",
+  ".rar",
+  ".iso",
+  ".dmg",
+  ".ttf",
+  ".otf",
+  ".woff",
+  ".woff2",
+  ".eot",
+  ".wasm",
+  ".bin",
+  ".exe",
+  ".dll",
+]);
+
+function isBinaryPath(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  return binaryExtensions.has(ext);
+}
+
+function isBinaryDiffBlock(block) {
+  return (
+    /GIT binary patch/i.test(block) ||
+    /Binary files .* differ/i.test(block) ||
+    /\nbinary mode /i.test(block)
+  );
+}
 
 export function splitDiffByFile(diffText) {
   const rawBlocks = diffText.split(/^diff --git /gm).filter(Boolean);
@@ -23,8 +90,20 @@ export function splitDiffByFile(diffText) {
 
       const wasDeleted = /--- a\/.+\n\+\+\+ \/dev\/null/.test(block);
       const isNewFile = /--- \/dev\/null\n\+\+\+ b\//.test(block);
+      const renameFromMatch = block.match(/^rename from (.+)$/m);
+      const lineCount = block.split(/\r?\n/).length;
+      const hasBinaryMarker = isBinaryDiffBlock(block);
 
-      return { filePath, block, wasDeleted, isNewFile };
+      return {
+        filePath,
+        block,
+        wasDeleted,
+        isNewFile,
+        isBinary: hasBinaryMarker || isBinaryPath(filePath),
+        renameFrom: renameFromMatch?.[1],
+        renameTo: renameToMatch?.[1],
+        lineCount,
+      };
     })
     .filter(({ filePath }) => {
       return !(

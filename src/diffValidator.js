@@ -27,8 +27,8 @@ export async function getAndValidateDiff(isVerbose, lang = "en") {
   }
 
   const blocks = splitDiffByFile(diff);
-  const deletedBlocks = blocks.filter((b) => b.wasDeleted);
-  const otherBlocks = blocks.filter((b) => !b.wasDeleted);
+  const deletedBlocks = blocks.filter((b) => b.wasDeleted && !b.isBinary);
+  const otherBlocks = blocks.filter((b) => !b.wasDeleted && !b.isBinary);
 
   const movedSummaries = detectMovedFunctions(deletedBlocks, otherBlocks);
 

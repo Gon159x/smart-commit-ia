@@ -60,6 +60,22 @@ export async function analyzeDiffBlock(
 ) {
   const apiKey = await getAPIKey();
   const absolutePath = path.join(process.cwd(), filePath);
+
+  const isBinary =
+    /GIT binary patch/i.test(diffBlock) ||
+    /Binary files .* differ/i.test(diffBlock) ||
+    /\nbinary mode /i.test(diffBlock);
+
+  if (isBinary) {
+    const filename = path.basename(filePath);
+    return {
+      title: `chore: binary asset updated`,
+      content: `### Changes in ${filename}\n- Binary asset touched. Diff skipped for analysis.`,
+      filename,
+      relatedFiles: [],
+    };
+  }
+
   const fullFileContent = await fs.readFile(absolutePath, "utf-8");
 
   const SYSTEM_CONTENT = `
