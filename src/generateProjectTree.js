@@ -13,7 +13,7 @@ export function generateReducedTree(filePaths) {
 
   const entries = [...uniqueDirs, ...filePaths]
     .sort((a, b) => a.localeCompare(b, "en"))
-    .map((p) => (p.includes(".") ? `📄 ${p}` : `📁 ${p}`));
+    .map((p) => (p.includes(".") ? `- ${p}` : `> ${p}`));
 
-  return entries.map((entry) => `├── ${entry}`).join("\n");
+  return entries.map((entry) => `* ${entry}`).join("\n");
 }

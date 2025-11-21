@@ -1,8 +1,75 @@
 import fs from "fs-extra";
+import path from "path";
 
 import { parse } from "@babel/parser";
 import babelTraverse from "@babel/traverse";
 const traverse = babelTraverse.default || babelTraverse;
+
+const binaryExtensions = new Set([
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".bmp",
+  ".tiff",
+  ".avif",
+  ".svg",
+  ".ico",
+  ".psd",
+  ".ai",
+  ".sketch",
+  ".fig",
+  ".mp3",
+  ".wav",
+  ".flac",
+  ".ogg",
+  ".mp4",
+  ".mov",
+  ".avi",
+  ".mkv",
+  ".webm",
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx",
+  ".odt",
+  ".ods",
+  ".zip",
+  ".tar",
+  ".gz",
+  ".bz2",
+  ".xz",
+  ".7z",
+  ".rar",
+  ".iso",
+  ".dmg",
+  ".ttf",
+  ".otf",
+  ".woff",
+  ".woff2",
+  ".eot",
+  ".wasm",
+  ".bin",
+  ".exe",
+  ".dll",
+]);
+
+function isBinaryPath(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  return binaryExtensions.has(ext);
+}
+
+function isBinaryDiffBlock(block) {
+  return (
+    /GIT binary patch/i.test(block) ||
+    /Binary files .* differ/i.test(block) ||
+    /\nbinary mode /i.test(block)
+  );
+}
 
 export function splitDiffByFile(diffText) {
   const rawBlocks = diffText.split(/^diff --git /gm).filter(Boolean);
@@ -23,8 +90,20 @@ export function splitDiffByFile(diffText) {
 
       const wasDeleted = /--- a\/.+\n\+\+\+ \/dev\/null/.test(block);
       const isNewFile = /--- \/dev\/null\n\+\+\+ b\//.test(block);
+      const renameFromMatch = block.match(/^rename from (.+)$/m);
+      const lineCount = block.split(/\r?\n/).length;
+      const hasBinaryMarker = isBinaryDiffBlock(block);
 
-      return { filePath, block, wasDeleted, isNewFile };
+      return {
+        filePath,
+        block,
+        wasDeleted,
+        isNewFile,
+        isBinary: hasBinaryMarker || isBinaryPath(filePath),
+        renameFrom: renameFromMatch?.[1],
+        renameTo: renameToMatch?.[1],
+        lineCount,
+      };
     })
     .filter(({ filePath }) => {
       return !(
@@ -249,19 +328,21 @@ export function extractContextMapFromCode(sourceCode, filename = undefined) {
 export function agruparPorRelaciones(bloques) {
   const grafo = new Map();
 
-  // Construir el grafo no dirigido
+  // Construir el grafo no dirigido usando filePath como identificador estable
   for (const bloque of bloques) {
-    if (!grafo.has(bloque.filename)) {
-      grafo.set(bloque.filename, new Set());
+    const id = bloque.filePath || bloque.filename;
+
+    if (!grafo.has(id)) {
+      grafo.set(id, new Set());
     }
 
     for (const related of bloque.relatedFiles) {
-      grafo.get(bloque.filename).add(related);
+      grafo.get(id).add(related);
 
       if (!grafo.has(related)) {
         grafo.set(related, new Set());
       }
-      grafo.get(related).add(bloque.filename); // relaciÃ³n bidireccional
+      grafo.get(related).add(id); // relación bidireccional
     }
   }
 
@@ -269,12 +350,12 @@ export function agruparPorRelaciones(bloques) {
   const grupos = [];
 
   for (const bloque of bloques) {
-    const { filename } = bloque;
+    const id = bloque.filePath || bloque.filename;
 
-    if (visitados.has(filename)) continue;
+    if (visitados.has(id)) continue;
 
     // BFS/DFS para buscar todos los conectados
-    const cola = [filename];
+    const cola = [id];
     const componente = new Set();
 
     while (cola.length) {
@@ -292,7 +373,9 @@ export function agruparPorRelaciones(bloques) {
     }
 
     // Agrupar los bloques correspondientes al componente
-    const grupo = bloques.filter((b) => componente.has(b.filename));
+    const grupo = bloques.filter((b) =>
+      componente.has(b.filePath || b.filename)
+    );
     grupos.push(grupo);
   }
 

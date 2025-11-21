@@ -13,7 +13,8 @@ export async function appendToChangelog(blocks, lang = "en") {
   let changelogEntry = `\n---\n\n## [${branch}] - ${date}\n\n### Commit: ${commit}\n`;
 
   for (const block of blocks) {
-    changelogEntry += `\n#### 📄 ${block.filename}\n${block.content}\n`;
+    const label = block.filePath || block.filename;
+    changelogEntry += `\n#### ${label}\n${block.content}\n`;
     if (block.relatedFiles?.length) {
       changelogEntry += `\nRelated: ${block.relatedFiles.join(", ")}\n`;
     }

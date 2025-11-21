@@ -7,7 +7,7 @@ export async function getGitDiff() {
   try {
     return await git.diff(["--cached"]);
   } catch (err) {
-    throw new Error("No se pudo obtener el git diff.", err);
+    throw new Error("No se pudo obtener el git diff." + (err?.message ? ` ${err.message}` : ""));
   }
 }
 
@@ -15,7 +15,7 @@ export async function stageAllChanges() {
   try {
     await git.add(".");
   } catch (err) {
-    throw new Error("No se pudo ejecutar git add .", err);
+    throw new Error("No se pudo ejecutar git add ." + (err?.message ? ` ${err.message}` : ""));
   }
 }
 
@@ -23,7 +23,7 @@ export async function unstageAllChanges() {
   try {
     await git.reset(["HEAD"]);
   } catch (err) {
-    throw new Error("No se pudo deshacer git add.", err);
+    throw new Error("No se pudo deshacer git add." + (err?.message ? ` ${err.message}` : ""));
   }
 }
 
@@ -33,10 +33,10 @@ export async function stageSpecificFiles(files, lang = "en") {
 
   for (const file of files) {
     try {
-      await fs.access(file); // Verifica si el archivo existe
+      await fs.access(file);
       toAdd.push(file);
     } catch {
-      toRemove.push(file); // No existe = fue eliminado
+      toRemove.push(file);
     }
   }
 
@@ -59,11 +59,8 @@ export async function commitWithMessage(message, lang = "en") {
   try {
     await git.commit(message);
   } catch (err) {
-    console.error(`${t("gitAddError", lang)}`, err);
-
-    throw new Error(
-      `No se pudo hacer git add para archivos específicos: ${err.message}`
-    );
+    console.error(`${t("gitCommitError", lang) || "Error running git commit"}`, err);
+    throw new Error(`No se pudo ejecutar git commit: ${err.message}`);
   }
 }
 
@@ -71,6 +68,6 @@ export async function getGitStatus() {
   try {
     return await git.status();
   } catch (err) {
-    throw new Error("No se pudo obtener el estado de git.", err);
+    throw new Error("No se pudo obtener el estado de git." + (err?.message ? ` ${err.message}` : ""));
   }
 }
