@@ -116,3 +116,43 @@ Related: fetchModels.js
 ---
 
 ---
+
+---
+
+## [dev] - 2025-11-21
+
+### Commit: f00f816
+
+#### 📄 checks.md
+### Changes in checks.md
+
+- Introduced a strategy to map all imports to relational blocks statically where possible, and to review the complete import tree to better relate blocks based on dependencies and improve AI responses.
+- Proposed adding a new prompt that includes all final commits to help the AI identify relationships between commits and cluster or connect them, effectively adding a layer of refinement.
+
+---
+
+- Roadmap additions:
+  - Add language support.
+  - Address the free tier issue (noted as currently flawed) and plan improvements.
+  - Allow users to supply prompting to improve commit messages and get explanations for changes.
+  - Extend ignore rules to cover additional languages or frameworks.
+  - Publish the project to npm.
+  - Consider marketing efforts (e.g., LinkedIn advertising).
+
+
+---
+
+---
+
+## [dev] - 2025-11-21
+
+### Commit: 3ab8103
+
+#### 📄 fetchModels.js
+### Changes in fetchModels.js
+
+- Added openai/gpt-5-nano to the alwaysInclude list so this model is always considered among the curated models, alongside existing ones like gpt-4.1-nano, gpt-4.1, gpt-3.5-turbo, and gpt-4.
+- No behavioral changes to the selection/merging logic; it still combines must-have models with the cheapest topN models and de-duplicates by name.
+
+
+---
