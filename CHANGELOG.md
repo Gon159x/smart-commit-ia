@@ -156,3 +156,82 @@ Related: fetchModels.js
 
 
 ---
+
+---
+
+## [dev] - 2025-11-21
+
+### Commit: b53444f
+
+#### 📄 analyzeFlow.js
+### Changes in analyzeFlow.js
+
+- Add interactive handling for large diffs via a threshold (LARGE_DIFF_LINE_THRESHOLD) and an inquirer prompt (askForLargeDiffHandling) to choose between analyzing, noting, or skipping.
+- Implement binary asset summarization for binary file changes with buildBinarySummary and integrate it into the analysis flow so binary files are summarized without diff analysis.
+- Introduce a dedicated large-diff placeholder builder (buildLargeDiffPlaceholder) to generate a summary entry when a user chooses to note a large diff.
+- Enhance analyzeBlocksWithIA to process blockInfo objects, gracefully handle binary files and large diffs, and compute diff line counts using lineCount when provided or by counting lines in the block.
+- Adapt multilingual support by threading lang through prompts and messages (using t from i18n.js).
+- Maintain existing deleted-block handling and add relatedFiles extraction from removed blocks.
+- Ensure non-binary, small-diff files continue to be analyzed via analyzeDiffBlock with verbose logging.
+
+Related: analyzeWithLLM.js, i18n.js
+
+#### 📄 analyzeWithLLM.js
+### Changes in analyzeWithLLM.js
+- Binary asset updated. Diff skipped.
+
+#### 📄 codeHandler.js
+### Changes in codeHandler.js
+- Binary asset updated. Diff skipped.
+
+#### 📄 diffValidator.js
+### Changes in diffValidator.js
+
+- Exclude binary diff blocks from deletion and non-deletion categories when calculating moved function summaries. This is achieved by filtering on isBinary in addition to wasDeleted.
+- As a result, binary changes (e.g., images) won't be treated as deletions or potential function relocations, improving accuracy of moved/refactor detection.
+
+Related: gitHandler.js, codeHandler.js, i18n.js
+
+---
+
+---
+
+## [dev] - 2025-11-21
+
+### Commit: b75290f
+
+#### 📄 en.js
+### Changes in en.js
+
+- Introduced new localization keys to support large-diff workflow:
+  - largeDiffPrompt: prompts user how to proceed for a large diff.
+  - largeDiffAnalyze: label for analyzing large diffs with AI (may take time/tokens).
+  - largeDiffSkipWithNote: option to skip analysis but add a simple note.
+  - largeDiffSkip: option to skip analysis and ignore the file.
+  - binaryFileSkipped: message displayed when a binary file is detected and skipped.
+  - largeDiffSkipped: confirmation message when skipping large diff per user choice.
+  - largeDiffNoted: confirmation that a placeholder note was added for the large diff.
+
+- These updates extend the English locale to support UX around large diffs; no runtime logic changes.
+
+
+---
+
+---
+
+## [dev] - 2025-11-21
+
+### Commit: f7b2847
+
+#### 📄 es.js
+### Changes in es.js
+
+- Updated icons and wording for several status messages to improve UI feedback (e.g., apiKeyUsage icon changed from 🔐 to 🔑, suggestedCommit/iconography updated, and files label standardized to 📄).
+- Refined analysis and error messaging for deletion/refactor scenarios (analyzingDeleted, deletedSummarySuccess, verboseDeletedSummary, errorProcessingDeleted) with updated icons to convey status more clearly.
+- Improved per-file IA processing messages and prompts for consistency (analyzingFile, fileProcessed, verboseAnalyzeResponse, errorProcessingFile) and updated Git/AI advisory labels (gitAdviceTitle, aiAdviceTitle).
+- Enhanced prompt and JSON parsing prompts to align with Spanish terminology and emojis (chooseModel, promptSent, errorParsingJSON, errorAnalyzeDiffBlock, errorSummarizeGroup).
+- Added support for large-diff workflow with new prompts and actions (largeDiffPrompt, largeDiffAnalyze, largeDiffSkipWithNote, largeDiffSkip, binaryFileSkipped, largeDiffSkipped, largeDiffNoted).
+- Updated changelog-related messaging to reflect changes (changelogEntryAdded, changelogUpdateFail, changelogCommit, noChangelogChanges, changelogCommitFail, changelogUpdated).
+- General consistency and clarity improvements across UI strings, including diff labeling (fullDiff), artificial blocks indicator (artificialBlocks), and related user prompts.
+
+---
