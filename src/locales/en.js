@@ -77,4 +77,14 @@ export default {
   apiKeyEmpty: "API Key cannot be empty.",
   selectLanguage: "Select interface language:",
   pressEnter: "Press ENTER to continue...",
+  largeDiffPrompt:
+    "The diff for {file} has around {lines} lines. How do you want to proceed?",
+  largeDiffAnalyze: "Analyze with AI (may take time/tokens)",
+  largeDiffSkipWithNote: "Skip analysis and add a simple note",
+  largeDiffSkip: "Skip analysis and ignore this file",
+  binaryFileSkipped: "Binary file detected, skipping diff analysis for: {file}",
+  largeDiffSkipped:
+    "Skipped large diff for {file} (~{lines} lines) per user choice.",
+  largeDiffNoted:
+    "Added placeholder note for large diff in {file} (~{lines} lines).",
 };
