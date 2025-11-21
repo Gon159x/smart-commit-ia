@@ -235,3 +235,15 @@ Related: gitHandler.js, codeHandler.js, i18n.js
 - General consistency and clarity improvements across UI strings, including diff labeling (fullDiff), artificial blocks indicator (artificialBlocks), and related user prompts.
 
 ---
+
+---
+
+## [dev] - 2025-11-21
+
+### Commit: f01ca7c
+
+#### 📄 demo copy.gif
+### Changes in demo copy.gif
+- Binary asset updated. Diff skipped.
+
+---
